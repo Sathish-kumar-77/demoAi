@@ -1,0 +1,30 @@
+<div class="navbar">
+  <div class="logo">Transaction History</div>
+  <a class="link" routerLink="/dashboard">Back</a>
+</div>
+
+<div class="card">
+  <h2>Recent transactions</h2>
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align: left; padding: 8px;">UPI ID</th>
+        <th style="text-align: left; padding: 8px;">Amount</th>
+        <th style="text-align: left; padding: 8px;">Result</th>
+        <th style="text-align: left; padding: 8px;">Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let tx of history">
+        <td style="padding: 8px;">{{ tx.upiId }}</td>
+        <td style="padding: 8px;">₹{{ tx.amount }}</td>
+        <td style="padding: 8px;">
+          <span [class.badge-fraud]="tx.isFraud" [class.badge-safe]="!tx.isFraud">
+            {{ tx.isFraud ? 'Fraud' : 'Safe' }}
+          </span>
+        </td>
+        <td style="padding: 8px;">{{ tx.createdAt | date: 'short' }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
