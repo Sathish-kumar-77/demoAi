@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { TransactionService } from '../services/transaction.service';
@@ -38,9 +39,18 @@ export class PayComponent {
         localStorage.setItem('lastResult', JSON.stringify(response));
         this.router.navigate(['/result']);
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.loading = false;
-        this.error = 'Payment failed. Try again.';
+        if (error.status === 0) {
+          this.error = 'API unreachable. Ensure backend is running at http://localhost:5000.';
+          return;
+        }
+
+        const serverMessage = typeof error.error === 'string'
+          ? error.error
+          : error.error?.message || error.error?.detail;
+
+        this.error = serverMessage || `Payment failed (HTTP ${error.status}).`;
       }
     });
   }
