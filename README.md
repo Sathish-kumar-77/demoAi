@@ -1,5 +1,12 @@
 # UPI Fraud Detection Demo
 
+## Version compatibility
+- Node.js: `v22.15.0` ✅
+- npm: `10.9.2` ✅
+- Angular CLI/packages: `19.2.x` (configured in `frontend/package.json`)
+- .NET SDK: 7.0+ (project targets net7.0)
+- Python: 3.10+
+
 ## Folder structure
 ```
 frontend/           # Angular app
@@ -23,12 +30,12 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 ```bash
 cd backend
 # restore packages
-DOTNET_ENVIRONMENT=Development dotnet restore
-# create sqlite db
-DOTNET_ENVIRONMENT=Development dotnet ef migrations add InitialCreate
-DOTNET_ENVIRONMENT=Development dotnet ef database update
+dotnet restore
+# create sqlite db (install dotnet-ef tool once if required: dotnet tool install --global dotnet-ef)
+dotnet ef migrations add InitialCreate
+dotnet ef database update
 # run api
-DOTNET_ENVIRONMENT=Development dotnet run --urls http://localhost:5000
+dotnet run --urls http://localhost:5000
 ```
 
 ### 3) Frontend (Angular)
@@ -83,5 +90,6 @@ curl -X GET http://localhost:5000/api/transactions/history \
 
 ## Troubleshooting
 - CORS: Backend allows `http://localhost:4200`. Update in `Program.cs` if needed.
-- HTTPS: `dotnet run` uses HTTP. If HTTPS is enforced in your setup, update Angular API base URL.
+- HTTPS: This setup runs over HTTP (`http://localhost:5000`).
 - SMTP: Update `backend/appsettings.json` with real SMTP credentials.
+- ML JSON contract: backend now maps FastAPI snake_case response keys (`fraud_probability`, `is_fraud`) correctly.

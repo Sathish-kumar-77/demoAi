@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace UpiFraudApi.Services;
 
@@ -24,4 +25,8 @@ public class MlService
 }
 
 public record MlRequest(Dictionary<string, double> Features);
-public record MlResponse(double FraudProbability, bool IsFraud);
+
+public record MlResponse(
+    [property: JsonPropertyName("fraud_probability")] double FraudProbability,
+    [property: JsonPropertyName("is_fraud")] bool IsFraud
+);
