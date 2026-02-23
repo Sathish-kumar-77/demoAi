@@ -93,3 +93,16 @@ curl -X GET http://localhost:5000/api/transactions/history \
 - HTTPS: This setup runs over HTTP (`http://localhost:5000`).
 - SMTP: Update `backend/appsettings.json` with real SMTP credentials.
 - ML JSON contract: backend now maps FastAPI snake_case response keys (`fraud_probability`, `is_fraud`) correctly.
+
+
+## Frontend security notes (npm audit)
+- If you see warnings for deprecated transitive packages like `tar@6` or `glob@10`, this repo now uses `overrides` in `frontend/package.json` to force newer versions where compatible.
+- Run:
+  ```bash
+  cd frontend
+  npm install
+  npm audit
+  npm audit fix
+  ```
+- If your corporate registry blocks package upgrades, ask your admin to allow the required Angular/npm packages.
+- Avoid `npm audit fix --force` unless you are ready to retest the app for breaking changes.
