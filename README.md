@@ -89,7 +89,7 @@ curl -X GET http://localhost:5000/api/transactions/history \
 ```
 
 ## Troubleshooting
-- CORS: Backend allows `http://localhost:4200`. Update in `Program.cs` if needed.
+- CORS: Backend now allows localhost/127.0.0.1 origins on both http/https and any local port for demo development.
 - HTTPS: `UseHttpsRedirection` is disabled for this demo so Angular can call `http://localhost:5000` directly without redirect issues.
 - SMTP: Update `backend/appsettings.json` with real SMTP credentials.
 - ML JSON contract: backend now maps FastAPI snake_case response keys (`fraud_probability`, `is_fraud`) correctly.
@@ -108,3 +108,5 @@ curl -X GET http://localhost:5000/api/transactions/history \
 - Avoid `npm audit fix --force` unless you are ready to retest the app for breaking changes.
 
 - If Pay shows `API unreachable`, confirm backend is started with: `dotnet run --urls http://localhost:5000`.
+
+- Frontend API fallback: Angular now tries `http://localhost:5000/api` first, then `https://localhost:5001/api` automatically.

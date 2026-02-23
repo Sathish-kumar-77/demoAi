@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs/operators';
+import { catchError, tap, throwError } from 'rxjs';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASES = ['http://localhost:5000/api', 'https://localhost:5001/api'];
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +10,19 @@ const API_BASE = 'http://localhost:5000/api';
 export class AuthService {
   constructor(private http: HttpClient) {}
 
+  private postWithFallback<T>(path: string, body: unknown) {
+    return this.http.post<T>(`${API_BASES[0]}${path}`, body).pipe(
+      catchError((error) => {
+        if (error.status === 0 || error.status === 404) {
+          return this.http.post<T>(`${API_BASES[1]}${path}`, body);
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+
   login(email: string, password: string) {
-    return this.http.post<{ token: string }>(`${API_BASE}/auth/login`, {
+    return this.postWithFallback<{ token: string }>('/auth/login', {
       email,
       password
     }).pipe(
@@ -20,7 +31,7 @@ export class AuthService {
   }
 
   register(email: string, password: string) {
-    return this.http.post(`${API_BASE}/auth/register`, {
+    return this.postWithFallback('/auth/register', {
       email,
       password
     });
