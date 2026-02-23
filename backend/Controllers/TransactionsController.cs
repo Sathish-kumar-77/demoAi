@@ -32,6 +32,17 @@ public class TransactionsController : ControllerBase
         var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
 
         var now = DateTime.UtcNow;
+        var user = await _db.Users.Include(u => u.BankAccount).FirstAsync(u => u.Id == userId);
+        if (user.BankAccount == null)
+        {
+            return BadRequest("No bank account linked. Please link account in Profile first.");
+        }
+
+        if (user.BankAccount.Balance < request.Amount)
+        {
+            return BadRequest("Insufficient balance");
+        }
+
         var hour = now.Hour;
         var noteLength = request.Note?.Length ?? 0;
 
@@ -76,6 +87,7 @@ public class TransactionsController : ControllerBase
             CreatedAt = now
         };
 
+        user.BankAccount.Balance -= request.Amount;
         _db.Transactions.Add(tx);
         await _db.SaveChangesAsync();
 

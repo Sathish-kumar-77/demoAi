@@ -6,7 +6,10 @@
 <div class="card">
   <div class="balance-box">
     <span>View Balance</span>
-    <h1>₹ {{ balance | number: '1.2-2' }}</h1>
+    <h1 *ngIf="balance !== null">₹ {{ balance | number: '1.2-2' }}</h1>
+    <h1 *ngIf="balance === null">₹ •••••</h1>
+    <button class="primary-btn" style="margin-top: 10px;" (click)="viewBalance()">Check with UPI PIN</button>
+    <p class="pay-error" *ngIf="balanceError">{{ balanceError }}</p>
   </div>
 
   <h2 style="margin-top: 16px;">Quick actions</h2>

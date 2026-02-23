@@ -1,5 +1,5 @@
 <div class="navbar">
-  <div class="logo">Profile & Balance</div>
+  <div class="logo">Profile & Bank Link</div>
   <a class="link" routerLink="/dashboard">Back</a>
 </div>
 
@@ -8,21 +8,37 @@
   <h2>{{ name }}</h2>
   <p>{{ email }}</p>
 
-  <div class="balance-box">
-    <span>Available Balance</span>
-    <h1>₹ {{ balance | number: '1.2-2' }}</h1>
+  <h3>Link bank account (first time user)</h3>
+  <div class="form-group">
+    <label>Phone Number</label>
+    <input [(ngModel)]="phoneNumber" placeholder="Enter registered phone number" />
   </div>
+  <div class="form-group">
+    <label>UPI PIN</label>
+    <input type="password" [(ngModel)]="upiPin" placeholder="Enter UPI PIN" />
+  </div>
+  <button class="primary-btn" (click)="linkBankAccount()">Link Account</button>
 
-  <div class="tile-grid" style="margin-top: 8px;">
-    <div class="tile" routerLink="/pay">
-      <h3>Pay</h3>
-      <p>Send money</p>
-    </div>
-    <div class="tile" routerLink="/history">
-      <h3>History</h3>
-      <p>Track spends</p>
-    </div>
-  </div>
+  <p style="color: #166534; margin-top: 8px;" *ngIf="linkedMessage">{{ linkedMessage }}</p>
+  <p class="pay-error" *ngIf="linkError">{{ linkError }}</p>
+
+  <h3 style="margin-top: 16px;">Sample Bank Directory</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align:left; padding:8px;">Name</th>
+        <th style="text-align:left; padding:8px;">Phone</th>
+        <th style="text-align:left; padding:8px;">Bank</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of bankDirectory">
+        <td style="padding:8px;">{{ p.accountHolderName }}</td>
+        <td style="padding:8px;">{{ p.phoneNumber }}</td>
+        <td style="padding:8px;">{{ p.bankName }} ({{ p.accountNumberMasked }})</td>
+      </tr>
+    </tbody>
+  </table>
 
   <button class="primary-btn" style="margin-top: 14px;" (click)="logout()">Logout</button>
 </div>

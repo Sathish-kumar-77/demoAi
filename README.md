@@ -110,3 +110,17 @@ curl -X GET http://localhost:5000/api/transactions/history \
 - If Pay shows `API unreachable`, confirm backend is started with: `dotnet run --urls http://localhost:5000`.
 
 - Frontend API fallback: Angular now tries `http://localhost:5000/api` first, then `https://localhost:5001/api` automatically.
+
+
+## Bank linking + balance flow (important)
+1. Register/Login.
+2. Open **Profile** page.
+3. Link bank account using sample phone number + UPI PIN.
+4. Go to Dashboard -> click **Check with UPI PIN** to view live balance.
+5. Make payment; backend deducts amount from linked account.
+
+### Seeded sample accounts
+- Arjun Kumar, SBI, Phone: `9876543210`, UPI PIN: `1111`
+- Priya Sharma, HDFC, Phone: `9123456780`, UPI PIN: `2222`
+- Rahul Verma, ICICI, Phone: `9988776655`, UPI PIN: `3333`
+- Sneha Reddy, Axis, Phone: `9090909090`, UPI PIN: `4444`
