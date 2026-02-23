@@ -4,6 +4,7 @@ import { TransactionService } from '../services/transaction.service';
 
 @Component({
   selector: 'app-pay',
+  standalone: false,
   templateUrl: './pay.component.html'
 })
 export class PayComponent {

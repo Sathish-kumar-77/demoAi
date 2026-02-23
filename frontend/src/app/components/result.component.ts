@@ -10,6 +10,7 @@ interface ResultResponse {
 
 @Component({
   selector: 'app-result',
+  standalone: false,
   templateUrl: './result.component.html'
 })
 export class ResultComponent {

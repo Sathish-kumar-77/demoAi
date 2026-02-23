@@ -3,6 +3,7 @@ import { TransactionService } from '../services/transaction.service';
 
 @Component({
   selector: 'app-history',
+  standalone: false,
   templateUrl: './history.component.html'
 })
 export class HistoryComponent implements OnInit {
