@@ -110,3 +110,128 @@ input, textarea, select {
   gap: 8px;
   color: #1a73e8;
 }
+
+.gpay-shell {
+  display: flex;
+  justify-content: center;
+}
+
+.phone-frame {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(180deg, #0f172a 0%, #111827 40%, #ffffff 40%);
+  border-radius: 28px;
+  padding: 18px;
+  box-shadow: 0 14px 40px rgba(17, 24, 39, 0.25);
+}
+
+.pay-header {
+  color: #fff;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pay-header h3 {
+  margin: 0;
+}
+
+.pay-header p {
+  margin: 4px 0 0;
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #1a73e8;
+  font-weight: 700;
+}
+
+.pay-field {
+  background: #fff;
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.pay-field label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.currency-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.currency-input span {
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.currency-input input {
+  border: none;
+  font-size: 24px;
+  font-weight: 700;
+  width: 100%;
+}
+
+.currency-input input:focus {
+  outline: none;
+}
+
+.chip-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 1px solid #dbe5f5;
+  background: #f3f7ff;
+  color: #1a73e8;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pay-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pay-cta {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  background: #1a73e8;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pay-cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pay-error {
+  color: #ef4444;
+  margin-top: 10px;
+  font-size: 13px;
+}

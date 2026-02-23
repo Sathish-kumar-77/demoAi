@@ -1,33 +1,48 @@
 <div class="navbar">
-  <div class="logo">UPI Pay</div>
+  <div class="logo">GPay Style UPI</div>
   <a class="link" routerLink="/dashboard">Back</a>
 </div>
 
-<div class="card">
-  <h2>Send money</h2>
-  <div class="form-group">
-    <label>UPI ID</label>
-    <input type="text" [(ngModel)]="upiId" placeholder="name@bank" />
+<div class="gpay-shell">
+  <div class="phone-frame">
+    <div class="pay-header">
+      <div class="avatar">₹</div>
+      <div>
+        <h3>Pay via UPI</h3>
+        <p>Fast, secure, fraud-checked</p>
+      </div>
+    </div>
+
+    <div class="pay-field">
+      <label>To UPI ID</label>
+      <input type="text" [(ngModel)]="upiId" placeholder="name@bank" />
+    </div>
+
+    <div class="pay-field amount-block">
+      <label>Amount</label>
+      <div class="currency-input">
+        <span>₹</span>
+        <input type="number" [(ngModel)]="amount" placeholder="0" />
+      </div>
+      <div class="chip-row">
+        <button class="chip" *ngFor="let quick of quickAmounts" (click)="pickAmount(quick)">₹{{ quick }}</button>
+      </div>
+    </div>
+
+    <div class="pay-field">
+      <label>Note</label>
+      <input type="text" [(ngModel)]="note" placeholder="What's this for?" />
+    </div>
+
+    <div class="pay-meta">
+      <input type="text" [(ngModel)]="deviceId" placeholder="Device ID" />
+      <input type="text" [(ngModel)]="city" placeholder="City" />
+    </div>
+
+    <button class="pay-cta" [disabled]="loading || !upiId || amount <= 0" (click)="submit()">
+      {{ loading ? 'Processing...' : 'Pay Securely' }}
+    </button>
+
+    <p *ngIf="error" class="pay-error">{{ error }}</p>
   </div>
-  <div class="form-group">
-    <label>Amount (₹)</label>
-    <input type="number" [(ngModel)]="amount" />
-  </div>
-  <div class="form-group">
-    <label>Note</label>
-    <textarea rows="3" [(ngModel)]="note"></textarea>
-  </div>
-  <div class="form-group">
-    <label>Device ID</label>
-    <input type="text" [(ngModel)]="deviceId" />
-  </div>
-  <div class="form-group">
-    <label>City</label>
-    <input type="text" [(ngModel)]="city" />
-  </div>
-  <button class="primary-btn" [disabled]="loading" (click)="submit()">
-    Pay Now
-  </button>
-  <div class="loading" *ngIf="loading">Processing payment...</div>
-  <p *ngIf="error" style="color: #b71c1c;">{{ error }}</p>
 </div>

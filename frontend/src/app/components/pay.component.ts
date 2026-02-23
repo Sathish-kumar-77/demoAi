@@ -15,8 +15,13 @@ export class PayComponent {
   city = 'Bengaluru';
   loading = false;
   error = '';
+  quickAmounts = [199, 499, 999, 1999];
 
   constructor(private txService: TransactionService, private router: Router) {}
+
+  pickAmount(value: number) {
+    this.amount = value;
+  }
 
   submit() {
     this.loading = true;
