@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AccountService } from '../services/account.service';
 import { TransactionService } from '../services/transaction.service';
 
 @Component({
@@ -8,7 +9,7 @@ import { TransactionService } from '../services/transaction.service';
   standalone: false,
   templateUrl: './pay.component.html'
 })
-export class PayComponent {
+export class PayComponent implements OnInit {
   upiId = '';
   amount = 0;
   note = '';
@@ -17,8 +18,15 @@ export class PayComponent {
   loading = false;
   error = '';
   quickAmounts = [199, 499, 999, 1999];
+  upiDirectory: any[] = [];
 
-  constructor(private txService: TransactionService, private router: Router) {}
+  constructor(private txService: TransactionService, private accountService: AccountService, private router: Router) {}
+
+  ngOnInit() {
+    this.accountService.getUpiDirectory().subscribe((items: any) => {
+      this.upiDirectory = items;
+    });
+  }
 
   pickAmount(value: number) {
     this.amount = value;
@@ -41,11 +49,6 @@ export class PayComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading = false;
-        if (error.status === 0) {
-          this.error = 'API unreachable. Ensure backend is running at http://localhost:5000.';
-          return;
-        }
-
         const serverMessage = typeof error.error === 'string'
           ? error.error
           : error.error?.message || error.error?.detail;

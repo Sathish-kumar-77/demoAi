@@ -1,5 +1,5 @@
 <div class="navbar">
-  <div class="logo">Profile & Bank Link</div>
+  <div class="logo">Profile • Bank Accounts • UPI IDs</div>
   <a class="link" routerLink="/dashboard">Back</a>
 </div>
 
@@ -8,7 +8,7 @@
   <h2>{{ name }}</h2>
   <p>{{ email }}</p>
 
-  <h3>Link bank account (first time user)</h3>
+  <h3>Step 1: Enter phone + UPI PIN, request OTP</h3>
   <div class="form-group">
     <label>Phone Number</label>
     <input [(ngModel)]="phoneNumber" placeholder="Enter registered phone number" />
@@ -17,12 +17,40 @@
     <label>UPI PIN</label>
     <input type="password" [(ngModel)]="upiPin" placeholder="Enter UPI PIN" />
   </div>
-  <button class="primary-btn" (click)="linkBankAccount()">Link Account</button>
+  <button class="primary-btn" (click)="requestOtp()">Send OTP</button>
 
-  <p style="color: #166534; margin-top: 8px;" *ngIf="linkedMessage">{{ linkedMessage }}</p>
-  <p class="pay-error" *ngIf="linkError">{{ linkError }}</p>
+  <h3 style="margin-top: 14px;">Step 2: Verify OTP and create/link permanent UPI ID</h3>
+  <div class="form-group">
+    <label>OTP</label>
+    <input [(ngModel)]="otpCode" placeholder="Enter OTP" />
+  </div>
+  <button class="primary-btn" (click)="verifyOtpAndLink()">Verify OTP & Link</button>
 
-  <h3 style="margin-top: 16px;">Sample Bank Directory</h3>
+  <p style="color: #166534; margin-top: 8px;" *ngIf="infoMessage">{{ infoMessage }}</p>
+  <p class="pay-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <h3 style="margin-top: 18px;">Linked accounts</h3>
+  <table style="width:100%; border-collapse: collapse;" *ngIf="linkedAccounts.length > 0">
+    <thead>
+      <tr>
+        <th style="text-align:left; padding:8px;">UPI ID</th>
+        <th style="text-align:left; padding:8px;">Bank</th>
+        <th style="text-align:left; padding:8px;">Account</th>
+        <th style="text-align:left; padding:8px;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let acc of linkedAccounts">
+        <td style="padding:8px;">{{ acc.upiId }} <span *ngIf="acc.isPrimary">(Primary)</span></td>
+        <td style="padding:8px;">{{ acc.bankName }}</td>
+        <td style="padding:8px;">{{ acc.accountNumberMasked }}</td>
+        <td style="padding:8px;"><button class="chip" (click)="removeLinkedAccount(acc.id)">Remove</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <p *ngIf="linkedAccounts.length === 0">No linked accounts yet.</p>
+
+  <h3 style="margin-top: 16px;">Sample bank persons (phone-based linking)</h3>
   <table style="width:100%; border-collapse: collapse;">
     <thead>
       <tr>
@@ -42,3 +70,5 @@
 
   <button class="primary-btn" style="margin-top: 14px;" (click)="logout()">Logout</button>
 </div>
+
+<div class="snackbar" *ngIf="snackbarMessage">{{ snackbarMessage }}</div>

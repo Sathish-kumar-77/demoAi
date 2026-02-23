@@ -15,7 +15,10 @@
 
     <div class="pay-field">
       <label>To UPI ID</label>
-      <input type="text" [(ngModel)]="upiId" placeholder="name@bank" />
+      <input type="text" [(ngModel)]="upiId" list="upiList" placeholder="receiver@upi" />
+      <datalist id="upiList">
+        <option *ngFor="let u of upiDirectory" [value]="u.upiId">{{ u.holderName }} - {{ u.bankName }}</option>
+      </datalist>
     </div>
 
     <div class="pay-field amount-block">

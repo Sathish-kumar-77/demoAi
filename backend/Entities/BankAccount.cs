@@ -10,5 +10,5 @@ public class BankAccount
     public decimal Balance { get; set; }
     public string UpiPin { get; set; } = "1234";
 
-    public List<User> LinkedUsers { get; set; } = new();
+    public List<UserLinkedAccount> LinkedUsers { get; set; } = new();
 }

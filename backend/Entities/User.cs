@@ -7,8 +7,6 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string Role { get; set; } = "User";
 
-    public int? BankAccountId { get; set; }
-    public BankAccount? BankAccount { get; set; }
-
     public List<Transaction> Transactions { get; set; } = new();
+    public List<UserLinkedAccount> LinkedAccounts { get; set; } = new();
 }

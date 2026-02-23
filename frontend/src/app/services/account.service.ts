@@ -32,15 +32,42 @@ export class AccountService {
     );
   }
 
-  getDirectory() {
-    return this.getWithFallback('/accounts/directory');
+  private deleteWithFallback(path: string) {
+    return this.http.delete(`${API_BASES[0]}${path}`).pipe(
+      catchError((error) => {
+        if (error.status === 0 || error.status === 404) {
+          return this.http.delete(`${API_BASES[1]}${path}`);
+        }
+        return throwError(() => error);
+      })
+    );
   }
 
-  linkAccount(phoneNumber: string, upiPin: string) {
-    return this.postWithFallback('/accounts/link', { phoneNumber, upiPin });
+  getBankDirectory() {
+    return this.getWithFallback('/accounts/bank-directory');
+  }
+
+  getUpiDirectory() {
+    return this.getWithFallback('/accounts/upi-directory');
+  }
+
+  requestOtp(phoneNumber: string, upiPin: string) {
+    return this.postWithFallback('/accounts/request-otp', { phoneNumber, upiPin });
+  }
+
+  verifyOtp(phoneNumber: string, otpCode: string) {
+    return this.postWithFallback('/accounts/verify-otp', { phoneNumber, otpCode });
+  }
+
+  getLinkedAccounts() {
+    return this.getWithFallback('/accounts/linked');
+  }
+
+  removeLinkedAccount(linkedId: number) {
+    return this.deleteWithFallback(`/accounts/linked/${linkedId}`);
   }
 
   getBalance(upiPin: string) {
-    return this.postWithFallback('/accounts/balance', { phoneNumber: '', upiPin });
+    return this.postWithFallback('/accounts/balance', { upiPin });
   }
 }

@@ -12,11 +12,17 @@ import { AuthService } from '../services/auth.service';
 export class ProfileComponent implements OnInit {
   email = 'upi.user@example.com';
   name = 'UPI User';
-  linkedMessage = '';
-  linkError = '';
+
   phoneNumber = '';
   upiPin = '';
+  otpCode = '';
+
   bankDirectory: any[] = [];
+  linkedAccounts: any[] = [];
+
+  infoMessage = '';
+  errorMessage = '';
+  snackbarMessage = '';
 
   constructor(private auth: AuthService, private router: Router, private accountService: AccountService) {}
 
@@ -28,21 +34,60 @@ export class ProfileComponent implements OnInit {
       this.name = this.email.split('@')[0];
     }
 
-    this.accountService.getDirectory().subscribe((items: any) => {
+    this.loadBankDirectory();
+    this.loadLinkedAccounts();
+  }
+
+  loadBankDirectory() {
+    this.accountService.getBankDirectory().subscribe((items: any) => {
       this.bankDirectory = items;
     });
   }
 
-  linkBankAccount() {
-    this.linkError = '';
-    this.linkedMessage = '';
+  loadLinkedAccounts() {
+    this.accountService.getLinkedAccounts().subscribe((items: any) => {
+      this.linkedAccounts = items;
+    });
+  }
 
-    this.accountService.linkAccount(this.phoneNumber, this.upiPin).subscribe({
+  requestOtp() {
+    this.errorMessage = '';
+    this.infoMessage = '';
+
+    this.accountService.requestOtp(this.phoneNumber, this.upiPin).subscribe({
       next: (response: any) => {
-        this.linkedMessage = `Linked: ${response.bankName} - ${response.accountNumberMasked}`;
+        this.infoMessage = `${response.message}. Demo OTP: ${response.demoOtp}`;
       },
       error: (error: HttpErrorResponse) => {
-        this.linkError = typeof error.error === 'string' ? error.error : error.error?.message || 'Unable to link account';
+        this.errorMessage = this.extractError(error);
+      }
+    });
+  }
+
+  verifyOtpAndLink() {
+    this.errorMessage = '';
+    this.infoMessage = '';
+
+    this.accountService.verifyOtp(this.phoneNumber, this.otpCode).subscribe({
+      next: (response: any) => {
+        this.infoMessage = `${response.message} | UPI ID: ${response.upiId}`;
+        this.showSnackbar(`UPI ID created successfully: ${response.upiId}`);
+        this.loadLinkedAccounts();
+        this.otpCode = '';
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage = this.extractError(error);
+      }
+    });
+  }
+
+  removeLinkedAccount(linkedId: number) {
+    this.accountService.removeLinkedAccount(linkedId).subscribe({
+      next: () => {
+        this.loadLinkedAccounts();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage = this.extractError(error);
       }
     });
   }
@@ -50,5 +95,16 @@ export class ProfileComponent implements OnInit {
   logout() {
     this.auth.logout();
     this.router.navigate(['/login']);
+  }
+
+  private extractError(error: HttpErrorResponse) {
+    return typeof error.error === 'string' ? error.error : error.error?.message || error.error?.detail || 'Something went wrong';
+  }
+
+  private showSnackbar(message: string) {
+    this.snackbarMessage = message;
+    setTimeout(() => {
+      this.snackbarMessage = '';
+    }, 3000);
   }
 }

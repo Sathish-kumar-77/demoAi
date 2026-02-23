@@ -32,13 +32,22 @@ public class TransactionsController : ControllerBase
         var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
 
         var now = DateTime.UtcNow;
-        var user = await _db.Users.Include(u => u.BankAccount).FirstAsync(u => u.Id == userId);
-        if (user.BankAccount == null)
+        var sourceLink = await _db.UserLinkedAccounts
+            .Include(x => x.BankAccount)
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.IsPrimary);
+
+        if (sourceLink?.BankAccount == null)
         {
-            return BadRequest("No bank account linked. Please link account in Profile first.");
+            return BadRequest("No linked account found. Link account from Profile.");
         }
 
-        if (user.BankAccount.Balance < request.Amount)
+        var receiverExists = await _db.UserLinkedAccounts.AnyAsync(x => x.UpiId == request.UpiId);
+        if (!receiverExists)
+        {
+            return BadRequest("UPI ID not found in UPI directory");
+        }
+
+        if (sourceLink.BankAccount.Balance < request.Amount)
         {
             return BadRequest("Insufficient balance");
         }
@@ -87,7 +96,7 @@ public class TransactionsController : ControllerBase
             CreatedAt = now
         };
 
-        user.BankAccount.Balance -= request.Amount;
+        sourceLink.BankAccount.Balance -= request.Amount;
         _db.Transactions.Add(tx);
         await _db.SaveChangesAsync();
 

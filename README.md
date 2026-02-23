@@ -89,6 +89,7 @@ curl -X GET http://localhost:5000/api/transactions/history \
 ```
 
 ## Troubleshooting
+- If you upgraded from older schema, delete old `backend/upi-fraud.db` once so seeded account/link tables are recreated.
 - CORS: Backend now allows localhost/127.0.0.1 origins on both http/https and any local port for demo development.
 - HTTPS: `UseHttpsRedirection` is disabled for this demo so Angular can call `http://localhost:5000` directly without redirect issues.
 - SMTP: Update `backend/appsettings.json` with real SMTP credentials.
@@ -124,3 +125,20 @@ curl -X GET http://localhost:5000/api/transactions/history \
 - Priya Sharma, HDFC, Phone: `9123456780`, UPI PIN: `2222`
 - Rahul Verma, ICICI, Phone: `9988776655`, UPI PIN: `3333`
 - Sneha Reddy, Axis, Phone: `9090909090`, UPI PIN: `4444`
+
+
+## OTP-based account linking (updated)
+- Profile now uses **2-step link flow**:
+  1. Enter phone number + UPI PIN and request OTP.
+  2. Verify OTP to create permanent UPI ID and link account.
+- Users can link **multiple bank accounts** and remove linked accounts.
+- Pay supports only receiver UPI IDs from backend UPI directory.
+
+### New account APIs
+- `GET /api/accounts/bank-directory`
+- `GET /api/accounts/upi-directory`
+- `POST /api/accounts/request-otp` `{ phoneNumber, upiPin }`
+- `POST /api/accounts/verify-otp` `{ phoneNumber, otpCode }`
+- `GET /api/accounts/linked`
+- `DELETE /api/accounts/linked/{linkedId}`
+- `POST /api/accounts/balance` `{ upiPin }`
