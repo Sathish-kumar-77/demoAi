@@ -10,6 +10,7 @@ import { DashboardComponent } from './components/dashboard.component';
 import { PayComponent } from './components/pay.component';
 import { ResultComponent } from './components/result.component';
 import { HistoryComponent } from './components/history.component';
+import { ProfileComponent } from './components/profile.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
@@ -20,7 +21,8 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
     DashboardComponent,
     PayComponent,
     ResultComponent,
-    HistoryComponent
+    HistoryComponent,
+    ProfileComponent
   ],
   imports: [BrowserModule, FormsModule, HttpClientModule, AppRoutingModule],
   providers: [

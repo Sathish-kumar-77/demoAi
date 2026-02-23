@@ -1,26 +1,37 @@
-<div class="card">
-  <div class="navbar">
-    <div class="logo">UPI Fraud Detection</div>
-  </div>
-  <h2>{{ isRegister ? 'Create account' : 'Welcome back' }}</h2>
-  <p>Secure payments with real-time fraud detection.</p>
+<div class="login-wrap">
+  <div class="login-overlay"></div>
 
-  <div class="form-group">
-    <label>Email</label>
-    <input type="email" [(ngModel)]="email" placeholder="you@example.com" />
-  </div>
-  <div class="form-group">
-    <label>Password</label>
-    <input type="password" [(ngModel)]="password" placeholder="••••••" />
-  </div>
-  <button class="primary-btn" (click)="submit()">
-    {{ isRegister ? 'Register' : 'Login' }}
-  </button>
-  <p *ngIf="error" style="color: #b71c1c; margin-top: 12px;">{{ error }}</p>
+  <div class="login-card">
+    <div class="brand-row">
+      <div class="brand-dot">₹</div>
+      <div>
+        <h2>UPI Secure Pay</h2>
+        <p>GPay-style protected payments</p>
+      </div>
+    </div>
 
-  <p style="margin-top: 16px;">
-    <span class="link" (click)="toggleMode()">
-      {{ isRegister ? 'Already have an account? Login' : 'New here? Register' }}
-    </span>
-  </p>
+    <h3>{{ isRegister ? 'Create your account' : 'Welcome back' }}</h3>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" [(ngModel)]="email" placeholder="you@example.com" />
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" [(ngModel)]="password" placeholder="••••••" />
+    </div>
+
+    <button class="primary-btn" style="width: 100%;" (click)="submit()">
+      {{ isRegister ? 'Register' : 'Login' }}
+    </button>
+
+    <p *ngIf="error" class="pay-error" style="margin-top: 10px;">{{ error }}</p>
+
+    <p style="margin-top: 16px; text-align: center;">
+      <span class="link" (click)="toggleMode()">
+        {{ isRegister ? 'Already have an account? Login' : 'New here? Register' }}
+      </span>
+    </p>
+  </div>
 </div>

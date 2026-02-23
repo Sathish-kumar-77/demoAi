@@ -8,6 +8,8 @@ import { AuthService } from '../services/auth.service';
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent {
+  balance = 25430.75;
+
   constructor(private router: Router, private auth: AuthService) {}
 
   navigate(path: string) {

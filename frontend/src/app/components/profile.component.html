@@ -1,0 +1,28 @@
+<div class="navbar">
+  <div class="logo">Profile & Balance</div>
+  <a class="link" routerLink="/dashboard">Back</a>
+</div>
+
+<div class="card profile-card">
+  <div class="profile-avatar">{{ name[0] | uppercase }}</div>
+  <h2>{{ name }}</h2>
+  <p>{{ email }}</p>
+
+  <div class="balance-box">
+    <span>Available Balance</span>
+    <h1>₹ {{ balance | number: '1.2-2' }}</h1>
+  </div>
+
+  <div class="tile-grid" style="margin-top: 8px;">
+    <div class="tile" routerLink="/pay">
+      <h3>Pay</h3>
+      <p>Send money</p>
+    </div>
+    <div class="tile" routerLink="/history">
+      <h3>History</h3>
+      <p>Track spends</p>
+    </div>
+  </div>
+
+  <button class="primary-btn" style="margin-top: 14px;" (click)="logout()">Logout</button>
+</div>

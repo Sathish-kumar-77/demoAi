@@ -5,6 +5,7 @@ import { DashboardComponent } from './components/dashboard.component';
 import { PayComponent } from './components/pay.component';
 import { ResultComponent } from './components/result.component';
 import { HistoryComponent } from './components/history.component';
+import { ProfileComponent } from './components/profile.component';
 import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
@@ -13,7 +14,8 @@ const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'pay', component: PayComponent, canActivate: [AuthGuard] },
   { path: 'result', component: ResultComponent, canActivate: [AuthGuard] },
-  { path: 'history', component: HistoryComponent, canActivate: [AuthGuard] }
+  { path: 'history', component: HistoryComponent, canActivate: [AuthGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] }
 ];
 
 @NgModule({
