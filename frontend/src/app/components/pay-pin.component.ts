@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { PaymentSessionService } from '../services/payment-session.service';
 import { TransactionService } from '../services/transaction.service';
@@ -9,17 +9,20 @@ import { TransactionService } from '../services/transaction.service';
   standalone: false,
   templateUrl: './pay-pin.component.html'
 })
-export class PayPinComponent {
+export class PayPinComponent implements OnInit {
   pin = '';
   loading = false;
   error = '';
-  draft = this.paymentSession.getDraft();
+  draft: any = null;
 
   constructor(
     private paymentSession: PaymentSessionService,
     private txService: TransactionService,
     private router: Router
-  ) {
+  ) {}
+
+  ngOnInit() {
+    this.draft = this.paymentSession.getDraft();
     if (!this.draft) {
       this.router.navigate(['/pay']);
     }
