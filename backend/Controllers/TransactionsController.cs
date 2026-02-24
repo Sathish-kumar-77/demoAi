@@ -26,6 +26,8 @@ public class TransactionsController : ControllerBase
     }
 
     [HttpPost("pay")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PayResponse>> Pay(PayRequest request)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
@@ -41,8 +43,8 @@ public class TransactionsController : ControllerBase
             return BadRequest("No linked account found. Link account from Profile.");
         }
 
-        var receiverExists = await _db.UserLinkedAccounts.AnyAsync(x => x.UpiId == request.UpiId);
-        if (!receiverExists)
+        var payee = await _db.Payees.FirstOrDefaultAsync(p => p.UpiId == request.PayeeUpiId || p.Phone == request.PayeePhone);
+        if (payee == null)
         {
             return BadRequest("UPI ID not found in UPI directory");
         }
@@ -52,11 +54,10 @@ public class TransactionsController : ControllerBase
             return BadRequest("Insufficient balance");
         }
 
-        var hour = now.Hour;
-        var noteLength = request.Note?.Length ?? 0;
+        var noteLength = request.Remark?.Length ?? 0;
 
         var hasDevice = await _db.Transactions.AnyAsync(t => t.UserId == userId && t.DeviceId == request.DeviceId);
-        var hasLocation = await _db.Transactions.AnyAsync(t => t.UserId == userId && t.City == request.City);
+        var hasLocation = await _db.Transactions.AnyAsync(t => t.UserId == userId && t.City == request.Channel);
         var velocityCount = await _db.Transactions.CountAsync(t => t.UserId == userId && t.CreatedAt >= now.AddMinutes(-10));
 
         var deviceRisk = hasDevice ? 0.0 : 1.0;
@@ -66,7 +67,7 @@ public class TransactionsController : ControllerBase
         var features = new Dictionary<string, double>
         {
             ["amount"] = (double)request.Amount,
-            ["hour"] = hour,
+            ["hour"] = request.HourOfDay,
             ["device_risk"] = deviceRisk,
             ["location_risk"] = locationRisk,
             ["velocity_risk"] = velocityRisk,
@@ -74,10 +75,11 @@ public class TransactionsController : ControllerBase
         };
 
         var prediction = await _ml.PredictAsync(features);
+        var predictionLabel = prediction.IsFraud ? "Fraud" : "Safe";
 
         var reasons = new List<string>();
         if (deviceRisk > 0) reasons.Add("New device detected");
-        if (locationRisk > 0) reasons.Add("New location detected");
+        if (locationRisk > 0) reasons.Add("New channel/location detected");
         if (velocityRisk > 0.6) reasons.Add("High transaction velocity");
         if (request.Amount > 5000) reasons.Add("High amount transaction");
         if (reasons.Count == 0) reasons.Add("Behavior within normal range");
@@ -85,13 +87,15 @@ public class TransactionsController : ControllerBase
         var tx = new Transaction
         {
             UserId = userId,
-            UpiId = request.UpiId,
+            UpiId = payee.UpiId,
             Amount = request.Amount,
-            Note = request.Note,
+            Note = request.Remark,
             DeviceId = request.DeviceId,
-            City = request.City,
+            City = request.Channel,
             FraudProbability = prediction.FraudProbability,
             IsFraud = prediction.IsFraud,
+            Prediction = predictionLabel,
+            Status = "Completed",
             Reasons = string.Join("|", reasons),
             CreatedAt = now
         };
@@ -105,7 +109,40 @@ public class TransactionsController : ControllerBase
             _email.SendFraudAlert(email, "UPI Fraud Alert", $"Transaction {tx.Id} flagged as fraud. Probability: {prediction.FraudProbability:P2}.");
         }
 
-        return Ok(new PayResponse(tx.Id, prediction.IsFraud, prediction.FraudProbability, reasons));
+        return Ok(new PayResponse(tx.Id, prediction.IsFraud, predictionLabel, prediction.FraudProbability, reasons, tx.Status));
+    }
+
+    [HttpPost("{id:int}/refund")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Refund(int id)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        var tx = await _db.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+        if (tx == null)
+        {
+            return NotFound("Transaction not found");
+        }
+
+        var canRefund = tx.FraudProbability >= 0.80 || tx.IsFraud || tx.Prediction == "Fraud";
+        if (!canRefund)
+        {
+            return BadRequest("Refund allowed only for fraud-flagged transactions");
+        }
+
+        tx.Status = "Refund Initiated";
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            tx.Id,
+            tx.UpiId,
+            tx.Amount,
+            tx.FraudProbability,
+            tx.Prediction,
+            tx.Status
+        });
     }
 
     [HttpGet("history")]
@@ -121,6 +158,8 @@ public class TransactionsController : ControllerBase
                 t.UpiId,
                 t.Amount,
                 t.IsFraud,
+                t.Prediction,
+                t.Status,
                 t.FraudProbability,
                 t.CreatedAt
             })

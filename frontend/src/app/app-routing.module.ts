@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './components/login.component';
 import { DashboardComponent } from './components/dashboard.component';
 import { PayComponent } from './components/pay.component';
+import { PayPinComponent } from './components/pay-pin.component';
 import { ResultComponent } from './components/result.component';
 import { HistoryComponent } from './components/history.component';
 import { ProfileComponent } from './components/profile.component';
@@ -13,6 +14,7 @@ const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'pay', component: PayComponent, canActivate: [AuthGuard] },
+  { path: 'pay/pin', component: PayPinComponent, canActivate: [AuthGuard] },
   { path: 'result', component: ResultComponent, canActivate: [AuthGuard] },
   { path: 'history', component: HistoryComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] }

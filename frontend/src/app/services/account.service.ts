@@ -43,6 +43,10 @@ export class AccountService {
     );
   }
 
+  resolvePayee(query: string) {
+    return this.getWithFallback(`/payees/resolve?query=${encodeURIComponent(query)}`);
+  }
+
   getBankDirectory() {
     return this.getWithFallback('/accounts/bank-directory');
   }

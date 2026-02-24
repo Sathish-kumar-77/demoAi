@@ -5,11 +5,13 @@ import { catchError, throwError } from 'rxjs';
 const API_BASES = ['http://localhost:5000/api', 'https://localhost:5001/api'];
 
 export interface PayRequest {
-  upiId: string;
+  payeeUpiId: string;
+  payeePhone: string;
   amount: number;
-  note: string;
+  remark: string;
   deviceId: string;
-  city: string;
+  hourOfDay: number;
+  channel: string;
 }
 
 @Injectable({
@@ -42,6 +44,10 @@ export class TransactionService {
 
   pay(request: PayRequest) {
     return this.postWithFallback('/transactions/pay', request);
+  }
+
+  refund(transactionId: number) {
+    return this.postWithFallback(`/transactions/${transactionId}/refund`, {});
   }
 
   getHistory() {

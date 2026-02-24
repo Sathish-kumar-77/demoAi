@@ -142,3 +142,9 @@ curl -X GET http://localhost:5000/api/transactions/history \
 - `GET /api/accounts/linked`
 - `DELETE /api/accounts/linked/{linkedId}`
 - `POST /api/accounts/balance` `{ upiPin }`
+
+
+## Quick run (services)
+1. Start ML service (FastAPI) on port `8000`.
+2. Start .NET API (`backend`) on localhost (`5000`/`5001`).
+3. Start Angular app (`frontend`) on `4200`.

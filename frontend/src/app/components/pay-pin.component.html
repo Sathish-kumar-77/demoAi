@@ -1,0 +1,19 @@
+<div class="navbar">
+  <div class="logo">Enter UPI PIN</div>
+  <a class="link" routerLink="/pay">Back</a>
+</div>
+
+<div class="card" *ngIf="draft">
+  <p>Paying <strong>₹{{ draft.amount }}</strong> to <strong>{{ draft.payeeName }}</strong> ({{ draft.payeeUpiId }})</p>
+
+  <div class="form-group">
+    <label>UPI PIN (4/6 digits)</label>
+    <input type="password" maxlength="6" [(ngModel)]="pin" placeholder="Enter UPI PIN" />
+  </div>
+
+  <button class="primary-btn" [disabled]="loading || pin.length < 4" (click)="confirmPay()">
+    {{ loading ? 'Processing...' : 'Confirm Pay' }}
+  </button>
+
+  <p *ngIf="error" class="pay-error">{{ error }}</p>
+</div>

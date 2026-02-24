@@ -8,6 +8,7 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './components/login.component';
 import { DashboardComponent } from './components/dashboard.component';
 import { PayComponent } from './components/pay.component';
+import { PayPinComponent } from './components/pay-pin.component';
 import { ResultComponent } from './components/result.component';
 import { HistoryComponent } from './components/history.component';
 import { ProfileComponent } from './components/profile.component';
@@ -20,6 +21,7 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
     LoginComponent,
     DashboardComponent,
     PayComponent,
+    PayPinComponent,
     ResultComponent,
     HistoryComponent,
     ProfileComponent

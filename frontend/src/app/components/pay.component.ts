@@ -1,60 +1,82 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { AccountService } from '../services/account.service';
-import { TransactionService } from '../services/transaction.service';
+import { PaymentSessionService } from '../services/payment-session.service';
 
 @Component({
   selector: 'app-pay',
   standalone: false,
   templateUrl: './pay.component.html'
 })
-export class PayComponent implements OnInit {
-  upiId = '';
+export class PayComponent implements OnDestroy {
+  query = '';
   amount = 0;
-  note = '';
-  deviceId = 'demo-device-1';
-  city = 'Bengaluru';
-  loading = false;
+  remark = '';
   error = '';
-  quickAmounts = [199, 499, 999, 1999];
-  upiDirectory: any[] = [];
+  resolvedPayee: any = null;
 
-  constructor(private txService: TransactionService, private accountService: AccountService, private router: Router) {}
+  private query$ = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
-  ngOnInit() {
-    this.accountService.getUpiDirectory().subscribe((items: any) => {
-      this.upiDirectory = items;
-    });
-  }
-
-  pickAmount(value: number) {
-    this.amount = value;
-  }
-
-  submit() {
-    this.loading = true;
-    this.error = '';
-    this.txService.pay({
-      upiId: this.upiId,
-      amount: this.amount,
-      note: this.note,
-      deviceId: this.deviceId,
-      city: this.city
-    }).subscribe({
-      next: (response) => {
-        this.loading = false;
-        localStorage.setItem('lastResult', JSON.stringify(response));
-        this.router.navigate(['/result']);
+  constructor(
+    private router: Router,
+    private accountService: AccountService,
+    private paymentSession: PaymentSessionService
+  ) {
+    this.query$.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap((q) => this.accountService.resolvePayee(q)),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (payee: any) => {
+        this.error = '';
+        this.resolvedPayee = payee;
       },
-      error: (error: HttpErrorResponse) => {
-        this.loading = false;
-        const serverMessage = typeof error.error === 'string'
-          ? error.error
-          : error.error?.message || error.error?.detail;
-
-        this.error = serverMessage || `Payment failed (HTTP ${error.status}).`;
+      error: (error) => {
+        this.resolvedPayee = null;
+        this.error = typeof error.error === 'string' ? error.error : error.error?.message || 'Payee not found';
       }
     });
+  }
+
+  onQueryChange(value: string) {
+    this.query = value;
+    this.resolvedPayee = null;
+    this.error = '';
+
+    const trimmed = value.trim();
+    const isPhone = trimmed.length === 10 && /^\d+$/.test(trimmed);
+    const isUpi = trimmed.includes('@');
+
+    if (isPhone || isUpi) {
+      this.query$.next(trimmed);
+    }
+  }
+
+  pay() {
+    if (!this.resolvedPayee || this.amount <= 0) {
+      return;
+    }
+
+    this.paymentSession.setDraft({
+      payeeName: this.resolvedPayee.name,
+      payeePhone: this.resolvedPayee.phone,
+      payeeUpiId: this.resolvedPayee.upiId,
+      amount: this.amount,
+      remark: this.remark
+    });
+
+    this.router.navigate(['/pay/pin']);
+  }
+
+  get isPhoneQuery() {
+    return this.query.trim().length === 10 && /^\d+$/.test(this.query.trim());
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

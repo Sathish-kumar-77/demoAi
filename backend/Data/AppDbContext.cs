@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<UserLinkedAccount> UserLinkedAccounts => Set<UserLinkedAccount>();
     public DbSet<OtpRequest> OtpRequests => Set<OtpRequest>();
+    public DbSet<Payee> Payees => Set<Payee>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +29,14 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<UserLinkedAccount>()
+            .HasIndex(x => x.UpiId)
+            .IsUnique();
+
+        modelBuilder.Entity<Payee>()
+            .HasIndex(x => x.Phone)
+            .IsUnique();
+
+        modelBuilder.Entity<Payee>()
             .HasIndex(x => x.UpiId)
             .IsUnique();
 

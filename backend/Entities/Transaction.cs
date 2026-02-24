@@ -12,6 +12,8 @@ public class Transaction
     public string City { get; set; } = string.Empty;
     public double FraudProbability { get; set; }
     public bool IsFraud { get; set; }
+    public string Prediction { get; set; } = "Safe";
+    public string Status { get; set; } = "Completed";
     public string Reasons { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
