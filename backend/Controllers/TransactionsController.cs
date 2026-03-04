@@ -82,12 +82,13 @@ public class TransactionsController : ControllerBase
 
         var status = "Completed";
         var allowTransaction = true;
+        var requiresFaceVerification = riskLevel != "LOW" || prediction.IsFraud;
 
-        if (riskLevel != "LOW")
+        if (requiresFaceVerification)
         {
             if (string.IsNullOrWhiteSpace(request.FaceImageBase64))
             {
-                return BadRequest($"Face verification required for {riskLevel} risk transaction");
+                return BadRequest($"Face verification required for {riskLevel} risk/suspicious transaction");
             }
 
             var faceStored = await _db.UserFaceEmbeddings.FirstOrDefaultAsync(x => x.UserId == userId);

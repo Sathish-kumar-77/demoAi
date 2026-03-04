@@ -16,6 +16,7 @@ export class ProfileComponent implements OnInit {
   phoneNumber = '';
   upiPin = '';
   otpCode = '';
+  faceImageBase64 = '';
 
   bankDirectory: any[] = [];
   linkedAccounts: any[] = [];
@@ -64,16 +65,36 @@ export class ProfileComponent implements OnInit {
     });
   }
 
+
+  onFaceSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      this.faceImageBase64 = result.includes(',') ? result.split(',')[1] : result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   verifyOtpAndLink() {
     this.errorMessage = '';
     this.infoMessage = '';
 
-    this.accountService.verifyOtp(this.phoneNumber, this.otpCode).subscribe({
+    if (!this.faceImageBase64) {
+      this.errorMessage = 'Face image is required to verify OTP and link account';
+      return;
+    }
+
+    this.accountService.verifyOtp(this.phoneNumber, this.otpCode, this.faceImageBase64).subscribe({
       next: (response: any) => {
         this.infoMessage = `${response.message} | UPI ID: ${response.upiId}`;
         this.showSnackbar(`UPI ID created successfully: ${response.upiId}`);
         this.loadLinkedAccounts();
         this.otpCode = '';
+        this.faceImageBase64 = '';
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = this.extractError(error);

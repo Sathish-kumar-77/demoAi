@@ -24,7 +24,11 @@
     <label>OTP</label>
     <input [(ngModel)]="otpCode" placeholder="Enter OTP" />
   </div>
-  <button class="primary-btn" (click)="verifyOtpAndLink()">Verify OTP & Link</button>
+  <div class="form-group">
+    <label>Face Selfie for TP Verification & Linking</label>
+    <input type="file" accept="image/*" capture="user" (change)="onFaceSelected($event)" />
+  </div>
+  <button class="primary-btn" (click)="verifyOtpAndLink()">Verify OTP, Face & Link</button>
 
   <p style="color: #166534; margin-top: 8px;" *ngIf="infoMessage">{{ infoMessage }}</p>
   <p class="pay-error" *ngIf="errorMessage">{{ errorMessage }}</p>

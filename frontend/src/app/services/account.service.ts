@@ -59,8 +59,8 @@ export class AccountService {
     return this.postWithFallback('/accounts/request-otp', { phoneNumber, upiPin });
   }
 
-  verifyOtp(phoneNumber: string, otpCode: string) {
-    return this.postWithFallback('/accounts/verify-otp', { phoneNumber, otpCode });
+  verifyOtp(phoneNumber: string, otpCode: string, faceImageBase64: string) {
+    return this.postWithFallback('/accounts/verify-otp', { phoneNumber, otpCode, faceImageBase64 });
   }
 
   getLinkedAccounts() {

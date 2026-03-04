@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using UpiFraudApi.Data;
 using UpiFraudApi.DTOs;
 using UpiFraudApi.Entities;
+using UpiFraudApi.Services;
 
 namespace UpiFraudApi.Controllers;
 
@@ -14,10 +15,12 @@ namespace UpiFraudApi.Controllers;
 public class AccountsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly FaceVerificationService _faceService;
 
-    public AccountsController(AppDbContext db)
+    public AccountsController(AppDbContext db, FaceVerificationService faceService)
     {
         _db = db;
+        _faceService = faceService;
     }
 
     [HttpGet("bank-directory")]
@@ -86,6 +89,11 @@ public class AccountsController : ControllerBase
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
+        if (string.IsNullOrWhiteSpace(request.FaceImageBase64))
+        {
+            return BadRequest("Face image is required for OTP verification and account linking");
+        }
+
         var otp = await _db.OtpRequests
             .Where(x => x.UserId == userId && x.PhoneNumber == request.PhoneNumber && !x.IsUsed)
             .OrderByDescending(x => x.CreatedAt)
@@ -104,6 +112,34 @@ public class AccountsController : ControllerBase
 
         var existingLink = await _db.UserLinkedAccounts
             .FirstOrDefaultAsync(x => x.UserId == userId && x.BankAccountId == account.Id);
+
+        var storedFace = await _db.UserFaceEmbeddings.FirstOrDefaultAsync(x => x.UserId == userId);
+        try
+        {
+            if (storedFace == null)
+            {
+                var registerResult = await _faceService.RegisterEmbeddingAsync(request.FaceImageBase64);
+                _db.UserFaceEmbeddings.Add(new UserFaceEmbedding
+                {
+                    UserId = userId,
+                    Embedding = FaceVerificationService.Base64ToBytes(registerResult.EmbeddingBase64),
+                    EmbeddingSize = registerResult.EmbeddingSize,
+                    ModelVersion = registerResult.ModelVersion
+                });
+            }
+            else
+            {
+                var verifyResult = await _faceService.VerifyFaceAsync(request.FaceImageBase64, storedFace.Embedding);
+                if (!verifyResult.Match)
+                {
+                    return BadRequest("Face verification failed during OTP verification");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Face verification error: {ex.Message}");
+        }
 
         otp.IsUsed = true;
 
