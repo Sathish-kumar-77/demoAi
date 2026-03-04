@@ -8,8 +8,8 @@
 
   <div class="form-group">
     <label>Search by phone or UPI ID</label>
-    <input type="text" [ngModel]="query" (ngModelChange)="onQueryChange($event)" placeholder="9876543210 or name@upi" />
-    <small *ngIf="!resolvedPayee && !resolving">Type 10-digit phone or UPI ID (with @)</small>
+    <input type="text" [ngModel]="query" (ngModelChange)="onQueryChange($event)" placeholder="9876543210 or name&#64;upi" />
+    <small *ngIf="!resolvedPayee && !resolving">Type 10-digit phone or UPI ID (with &#64;)</small>
   </div>
 
   <div *ngIf="resolving" class="loading">Resolving payee...</div>
