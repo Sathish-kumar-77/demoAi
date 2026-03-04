@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { AccountService } from '../services/account.service';
 import { AuthService } from '../services/auth.service';
@@ -9,7 +9,10 @@ import { AuthService } from '../services/auth.service';
   standalone: false,
   templateUrl: './profile.component.html'
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
+  @ViewChild('faceVideo') faceVideoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('faceCanvas') faceCanvasRef?: ElementRef<HTMLCanvasElement>;
+
   email = 'upi.user@example.com';
   name = 'UPI User';
 
@@ -17,6 +20,8 @@ export class ProfileComponent implements OnInit {
   upiPin = '';
   otpCode = '';
   faceImageBase64 = '';
+  cameraError = '';
+  captured = false;
 
   bankDirectory: any[] = [];
   linkedAccounts: any[] = [];
@@ -24,6 +29,8 @@ export class ProfileComponent implements OnInit {
   infoMessage = '';
   errorMessage = '';
   snackbarMessage = '';
+
+  private cameraStream: MediaStream | null = null;
 
   constructor(private auth: AuthService, private router: Router, private accountService: AccountService) {}
 
@@ -37,6 +44,54 @@ export class ProfileComponent implements OnInit {
 
     this.loadBankDirectory();
     this.loadLinkedAccounts();
+    this.startCamera();
+  }
+
+  ngOnDestroy() {
+    this.stopCamera();
+  }
+
+  async startCamera() {
+    this.cameraError = '';
+
+    try {
+      this.stopCamera();
+      this.cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      if (this.faceVideoRef?.nativeElement) {
+        this.faceVideoRef.nativeElement.srcObject = this.cameraStream;
+      }
+    } catch {
+      this.cameraError = 'Camera access denied or unavailable. Please allow camera permission.';
+    }
+  }
+
+  captureFace() {
+    const video = this.faceVideoRef?.nativeElement;
+    const canvas = this.faceCanvasRef?.nativeElement;
+    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
+      this.cameraError = 'Camera stream is not ready yet. Please try again.';
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      this.cameraError = 'Unable to capture face frame.';
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    this.faceImageBase64 = dataUrl.split(',')[1] || '';
+    this.captured = !!this.faceImageBase64;
+  }
+
+  private stopCamera() {
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach(track => track.stop());
+      this.cameraStream = null;
+    }
   }
 
   loadBankDirectory() {
@@ -65,26 +120,12 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-
-  onFaceSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result || '');
-      this.faceImageBase64 = result.includes(',') ? result.split(',')[1] : result;
-    };
-    reader.readAsDataURL(file);
-  }
-
   verifyOtpAndLink() {
     this.errorMessage = '';
     this.infoMessage = '';
 
     if (!this.faceImageBase64) {
-      this.errorMessage = 'Face image is required to verify OTP and link account';
+      this.errorMessage = 'Live face capture is required to verify OTP and link account';
       return;
     }
 
@@ -95,6 +136,7 @@ export class ProfileComponent implements OnInit {
         this.loadLinkedAccounts();
         this.otpCode = '';
         this.faceImageBase64 = '';
+        this.captured = false;
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = this.extractError(error);

@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { PaymentSessionService } from '../services/payment-session.service';
 import { TransactionService } from '../services/transaction.service';
@@ -9,12 +9,19 @@ import { TransactionService } from '../services/transaction.service';
   standalone: false,
   templateUrl: './pay-pin.component.html'
 })
-export class PayPinComponent implements OnInit {
+export class PayPinComponent implements OnInit, OnDestroy {
+  @ViewChild('faceVideo') faceVideoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('faceCanvas') faceCanvasRef?: ElementRef<HTMLCanvasElement>;
+
   pin = '';
   loading = false;
   error = '';
   draft: any = null;
   faceImageBase64 = '';
+  cameraError = '';
+  captured = false;
+
+  private cameraStream: MediaStream | null = null;
 
   constructor(
     private paymentSession: PaymentSessionService,
@@ -26,20 +33,57 @@ export class PayPinComponent implements OnInit {
     this.draft = this.paymentSession.getDraft();
     if (!this.draft) {
       this.router.navigate(['/pay']);
+      return;
+    }
+
+    this.startCamera();
+  }
+
+  ngOnDestroy() {
+    this.stopCamera();
+  }
+
+  async startCamera() {
+    this.cameraError = '';
+
+    try {
+      this.stopCamera();
+      this.cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      if (this.faceVideoRef?.nativeElement) {
+        this.faceVideoRef.nativeElement.srcObject = this.cameraStream;
+      }
+    } catch {
+      this.cameraError = 'Camera access denied or unavailable. Please allow camera permission.';
     }
   }
 
-  onFaceSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
+  captureFace() {
+    const video = this.faceVideoRef?.nativeElement;
+    const canvas = this.faceCanvasRef?.nativeElement;
+    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
+      this.cameraError = 'Camera stream is not ready yet. Please try again.';
+      return;
+    }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result || '');
-      this.faceImageBase64 = result.includes(',') ? result.split(',')[1] : result;
-    };
-    reader.readAsDataURL(file);
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      this.cameraError = 'Unable to read camera frame.';
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    this.faceImageBase64 = dataUrl.split(',')[1] || '';
+    this.captured = !!this.faceImageBase64;
+  }
+
+  private stopCamera() {
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach(track => track.stop());
+      this.cameraStream = null;
+    }
   }
 
   confirmPay() {
