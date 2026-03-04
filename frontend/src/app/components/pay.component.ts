@@ -15,6 +15,7 @@ export class PayComponent implements OnDestroy {
   remark = '';
   error = '';
   resolvedPayee: any = null;
+  resolving = false;
 
   private query$ = new Subject<string>();
   private destroy$ = new Subject<void>();
@@ -33,9 +34,11 @@ export class PayComponent implements OnDestroy {
       next: (payee: any) => {
         this.error = '';
         this.resolvedPayee = payee;
+        this.resolving = false;
       },
       error: (error) => {
         this.resolvedPayee = null;
+        this.resolving = false;
         this.error = typeof error.error === 'string' ? error.error : error.error?.message || 'Payee not found';
       }
     });
@@ -51,15 +54,49 @@ export class PayComponent implements OnDestroy {
     const isUpi = trimmed.includes('@');
 
     if (isPhone || isUpi) {
+      this.resolving = true;
       this.query$.next(trimmed);
+    } else {
+      this.resolving = false;
     }
   }
 
   pay() {
-    if (!this.resolvedPayee || this.amount <= 0) {
+    if (this.amount <= 0) {
+      this.error = 'Enter valid amount';
       return;
     }
 
+    if (this.resolvedPayee) {
+      this.goToPin();
+      return;
+    }
+
+    const trimmed = this.query.trim();
+    const isPhone = trimmed.length === 10 && /^\d+$/.test(trimmed);
+    const isUpi = trimmed.includes('@');
+    if (!isPhone && !isUpi) {
+      this.error = 'Enter valid phone number (10 digits) or UPI ID (name@upi).';
+      return;
+    }
+
+    this.resolving = true;
+    this.accountService.resolvePayee(trimmed).subscribe({
+      next: (payee: any) => {
+        this.resolving = false;
+        this.resolvedPayee = payee;
+        this.error = '';
+        this.goToPin();
+      },
+      error: (error) => {
+        this.resolving = false;
+        this.resolvedPayee = null;
+        this.error = typeof error.error === 'string' ? error.error : error.error?.message || 'Payee not found';
+      }
+    });
+  }
+
+  private goToPin() {
     this.paymentSession.setDraft({
       payeeName: this.resolvedPayee.name,
       payeePhone: this.resolvedPayee.phone,

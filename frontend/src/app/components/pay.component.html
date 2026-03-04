@@ -9,7 +9,10 @@
   <div class="form-group">
     <label>Search by phone or UPI ID</label>
     <input type="text" [ngModel]="query" (ngModelChange)="onQueryChange($event)" placeholder="9876543210 or name@upi" />
+    <small *ngIf="!resolvedPayee && !resolving">Type 10-digit phone or UPI ID (with @)</small>
   </div>
+
+  <div *ngIf="resolving" class="loading">Resolving payee...</div>
 
   <div *ngIf="resolvedPayee" class="card" style="padding: 12px; margin-bottom: 14px;">
     <div><strong>{{ resolvedPayee.name }}</strong> <span *ngIf="resolvedPayee.verified" class="badge-safe">Verified</span></div>
@@ -29,5 +32,7 @@
     <input type="text" [(ngModel)]="remark" placeholder="Add note" />
   </div>
 
-  <button class="primary-btn" [disabled]="!resolvedPayee || amount <= 0" (click)="pay()">Pay</button>
+  <button class="primary-btn" [disabled]="amount <= 0 || resolving" (click)="pay()">
+    {{ resolving ? 'Please wait...' : 'Pay' }}
+  </button>
 </div>
