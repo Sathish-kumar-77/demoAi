@@ -11,6 +11,11 @@
     <input type="password" maxlength="6" [(ngModel)]="pin" placeholder="Enter UPI PIN" />
   </div>
 
+  <div class="form-group">
+    <label>Live Face Selfie (required for medium/high risk)</label>
+    <input type="file" accept="image/*" capture="user" (change)="onFaceSelected($event)" />
+  </div>
+
   <button class="primary-btn" [disabled]="loading || pin.length < 4" (click)="confirmPay()">
     {{ loading ? 'Processing...' : 'Confirm Pay' }}
   </button>

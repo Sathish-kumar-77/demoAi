@@ -14,6 +14,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<PasswordHasher>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddHttpClient<MlService>();
+builder.Services.AddHttpClient<FaceVerificationService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

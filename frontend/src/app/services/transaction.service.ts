@@ -12,6 +12,7 @@ export interface PayRequest {
   deviceId: string;
   hourOfDay: number;
   channel: string;
+  faceImageBase64?: string | null;
 }
 
 @Injectable({

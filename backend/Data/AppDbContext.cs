@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<UserLinkedAccount> UserLinkedAccounts => Set<UserLinkedAccount>();
     public DbSet<OtpRequest> OtpRequests => Set<OtpRequest>();
     public DbSet<Payee> Payees => Set<Payee>();
+    public DbSet<UserFaceEmbedding> UserFaceEmbeddings => Set<UserFaceEmbedding>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +39,16 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Payee>()
             .HasIndex(x => x.UpiId)
+            .IsUnique();
+
+        modelBuilder.Entity<UserFaceEmbedding>()
+            .HasOne(x => x.User)
+            .WithOne(u => u.FaceEmbedding)
+            .HasForeignKey<UserFaceEmbedding>(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserFaceEmbedding>()
+            .HasIndex(x => x.UserId)
             .IsUnique();
 
         base.OnModelCreating(modelBuilder);

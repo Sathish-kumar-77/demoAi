@@ -12,6 +12,7 @@
 frontend/           # Angular app
 backend/            # ASP.NET Core Web API
 ml_service/         # FastAPI ML service
+face_service/       # FastAPI face recognition service
 ```
 
 ## Run instructions
@@ -146,5 +147,15 @@ curl -X GET http://localhost:5000/api/transactions/history \
 
 ## Quick run (services)
 1. Start ML service (FastAPI) on port `8000`.
-2. Start .NET API (`backend`) on localhost (`5000`/`5001`).
-3. Start Angular app (`frontend`) on `4200`.
+2. Start Face service (FastAPI) on port `8010`.
+3. Start .NET API (`backend`) on localhost (`5000`/`5001`).
+4. Start Angular app (`frontend`) on `4200`.
+
+### Start Face service
+```bash
+cd face_service
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8010 --workers 2
+```

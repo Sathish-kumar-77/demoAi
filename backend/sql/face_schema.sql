@@ -1,0 +1,10 @@
+CREATE TABLE UserFaceEmbeddings (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    UserId INTEGER NOT NULL UNIQUE,
+    Embedding BLOB NOT NULL,
+    ModelVersion TEXT NOT NULL,
+    EmbeddingSize INTEGER NOT NULL,
+    CreatedAt TEXT NOT NULL,
+    UpdatedAt TEXT NOT NULL,
+    FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
+);

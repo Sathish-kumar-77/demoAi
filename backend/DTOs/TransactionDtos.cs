@@ -7,7 +7,8 @@ public record PayRequest(
     string Remark,
     string DeviceId,
     int HourOfDay,
-    string Channel
+    string Channel,
+    string? FaceImageBase64
 );
 
 public record PayResponse(

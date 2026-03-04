@@ -14,6 +14,7 @@ export class PayPinComponent implements OnInit {
   loading = false;
   error = '';
   draft: any = null;
+  faceImageBase64 = '';
 
   constructor(
     private paymentSession: PaymentSessionService,
@@ -26,6 +27,19 @@ export class PayPinComponent implements OnInit {
     if (!this.draft) {
       this.router.navigate(['/pay']);
     }
+  }
+
+  onFaceSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      this.faceImageBase64 = result.includes(',') ? result.split(',')[1] : result;
+    };
+    reader.readAsDataURL(file);
   }
 
   confirmPay() {
@@ -43,7 +57,8 @@ export class PayPinComponent implements OnInit {
       remark: this.draft.remark,
       deviceId: 'demo-device-1',
       hourOfDay: new Date().getHours(),
-      channel: 'UPI_APP'
+      channel: 'UPI_APP',
+      faceImageBase64: this.faceImageBase64 || null
     }).subscribe({
       next: (response) => {
         this.loading = false;
