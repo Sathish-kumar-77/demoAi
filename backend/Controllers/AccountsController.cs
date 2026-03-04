@@ -65,10 +65,6 @@ public class AccountsController : ControllerBase
             return NotFound("No bank account found for this phone number");
         }
 
-        if (account.UpiPin != request.UpiPin)
-        {
-            return BadRequest("Invalid UPI PIN");
-        }
 
         var otp = Random.Shared.Next(100000, 999999).ToString();
         _db.OtpRequests.Add(new OtpRequest
@@ -146,6 +142,26 @@ public class AccountsController : ControllerBase
         if (existingLink == null)
         {
             var isFirst = !await _db.UserLinkedAccounts.AnyAsync(x => x.UserId == userId);
+            if (isFirst)
+            {
+                if (string.IsNullOrWhiteSpace(request.CreateUpiPin) || string.IsNullOrWhiteSpace(request.ConfirmUpiPin))
+                {
+                    return BadRequest("Create and confirm UPI PIN is required for first-time setup");
+                }
+
+                if (request.CreateUpiPin != request.ConfirmUpiPin)
+                {
+                    return BadRequest("UPI PIN and confirm PIN do not match");
+                }
+
+                if (request.CreateUpiPin.Length is < 4 or > 6 || !request.CreateUpiPin.All(char.IsDigit))
+                {
+                    return BadRequest("UPI PIN must be 4 to 6 digits");
+                }
+
+                account.UpiPin = request.CreateUpiPin;
+            }
+
             var prefix = account.AccountHolderName.Replace(" ", string.Empty).ToLowerInvariant();
             var upiId = $"{prefix}{userId}{account.Id}@upi";
 
@@ -158,7 +174,7 @@ public class AccountsController : ControllerBase
             });
 
             await _db.SaveChangesAsync();
-            return Ok(new { message = "Account linked successfully", upiId, account.BankName, account.AccountNumberMasked });
+            return Ok(new { message = isFirst ? "Account linked and UPI PIN created" : "Account linked successfully", upiId, account.BankName, account.AccountNumberMasked });
         }
 
         await _db.SaveChangesAsync();

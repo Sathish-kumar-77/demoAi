@@ -1,41 +1,52 @@
-<div class="navbar">
-  <div class="logo">Profile • Bank Accounts • UPI IDs</div>
+<div class="navbar gpay-nav">
+  <div class="logo">Profile & UPI Setup</div>
   <a class="link" routerLink="/dashboard">Back</a>
 </div>
 
-<div class="card profile-card">
+<div class="card profile-card gpay-surface">
   <div class="profile-avatar">{{ name[0] | uppercase }}</div>
   <h2>{{ name }}</h2>
   <p>{{ email }}</p>
 
-  <h3>Step 1: Enter phone + UPI PIN, request OTP</h3>
-  <div class="form-group">
-    <label>Phone Number</label>
-    <input [(ngModel)]="phoneNumber" placeholder="Enter registered phone number" />
-  </div>
-  <div class="form-group">
-    <label>UPI PIN</label>
-    <input type="password" [(ngModel)]="upiPin" placeholder="Enter UPI PIN" />
-  </div>
-  <button class="primary-btn" (click)="requestOtp()">Send OTP</button>
-
-  <h3 style="margin-top: 14px;">Step 2: Verify OTP and create/link permanent UPI ID</h3>
-  <div class="form-group">
-    <label>OTP</label>
-    <input [(ngModel)]="otpCode" placeholder="Enter OTP" />
-  </div>
-  <div class="form-group">
-    <label>Live Face Verification for TP Verification & Linking</label>
-    <video #faceVideo autoplay playsinline muted style="width:100%; max-width:320px; border-radius:8px; border:1px solid #ddd;"></video>
-    <canvas #faceCanvas style="display:none;"></canvas>
-    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-      <button class="chip" (click)="startCamera()" type="button">Start/Retry Camera</button>
-      <button class="chip" (click)="captureFace()" type="button">Capture Live Face</button>
+  <div class="step-card">
+    <h3>1) Enter phone number & request OTP</h3>
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input [(ngModel)]="phoneNumber" placeholder="Enter registered phone number" />
     </div>
-    <small *ngIf="captured" style="color:#166534;">Live face captured for verification.</small>
-    <small *ngIf="cameraError" class="pay-error">{{ cameraError }}</small>
+    <button class="primary-btn" (click)="requestOtp()">Send OTP</button>
   </div>
-  <button class="primary-btn" (click)="verifyOtpAndLink()">Verify OTP, Live Face & Link</button>
+
+  <div class="step-card">
+    <h3>2) Verify OTP with live face</h3>
+    <div class="form-group">
+      <label>OTP</label>
+      <input [(ngModel)]="otpCode" placeholder="Enter OTP" />
+    </div>
+
+    <div class="form-group" *ngIf="isFirstSetup">
+      <label>Create UPI PIN (first-time only)</label>
+      <input type="password" maxlength="6" [(ngModel)]="createUpiPin" placeholder="4-6 digit PIN" />
+    </div>
+    <div class="form-group" *ngIf="isFirstSetup">
+      <label>Confirm UPI PIN</label>
+      <input type="password" maxlength="6" [(ngModel)]="confirmUpiPin" placeholder="Re-enter PIN" />
+    </div>
+
+    <div class="form-group">
+      <label>Live Face Verification</label>
+      <video #faceVideo autoplay playsinline muted class="live-video"></video>
+      <canvas #faceCanvas style="display:none;"></canvas>
+      <div class="chip-row">
+        <button class="chip" (click)="startCamera()" type="button">Start/Retry Camera</button>
+        <button class="chip" (click)="captureFace()" type="button">Capture Live Face</button>
+      </div>
+      <small *ngIf="captured" style="color:#166534;">Live face captured successfully.</small>
+      <small *ngIf="cameraError" class="pay-error">{{ cameraError }}</small>
+    </div>
+
+    <button class="primary-btn" (click)="verifyOtpAndLink()">Complete UPI Setup</button>
+  </div>
 
   <p style="color: #166534; margin-top: 8px;" *ngIf="infoMessage">{{ infoMessage }}</p>
   <p class="pay-error" *ngIf="errorMessage">{{ errorMessage }}</p>
@@ -60,24 +71,6 @@
     </tbody>
   </table>
   <p *ngIf="linkedAccounts.length === 0">No linked accounts yet.</p>
-
-  <h3 style="margin-top: 16px;">Sample bank persons (phone-based linking)</h3>
-  <table style="width:100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="text-align:left; padding:8px;">Name</th>
-        <th style="text-align:left; padding:8px;">Phone</th>
-        <th style="text-align:left; padding:8px;">Bank</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let p of bankDirectory">
-        <td style="padding:8px;">{{ p.accountHolderName }}</td>
-        <td style="padding:8px;">{{ p.phoneNumber }}</td>
-        <td style="padding:8px;">{{ p.bankName }} ({{ p.accountNumberMasked }})</td>
-      </tr>
-    </tbody>
-  </table>
 
   <button class="primary-btn" style="margin-top: 14px;" (click)="logout()">Logout</button>
 </div>

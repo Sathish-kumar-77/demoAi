@@ -1,0 +1,18 @@
+<div class="navbar gpay-nav">
+  <div class="logo">Enter UPI PIN</div>
+  <a class="link" routerLink="/dashboard">Back</a>
+</div>
+
+<div class="card pay-shell">
+  <h2>Authenticate to view balance</h2>
+  <div class="form-group">
+    <label>UPI PIN (4/6 digits)</label>
+    <input type="password" maxlength="6" [(ngModel)]="pin" placeholder="Enter UPI PIN" />
+  </div>
+
+  <button class="pay-cta" [disabled]="loading || pin.length < 4" (click)="checkBalance()">
+    {{ loading ? 'Checking...' : 'Continue' }}
+  </button>
+
+  <p class="pay-error" *ngIf="error">{{ error }}</p>
+</div>

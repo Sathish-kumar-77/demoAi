@@ -17,8 +17,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   name = 'UPI User';
 
   phoneNumber = '';
-  upiPin = '';
   otpCode = '';
+  createUpiPin = '';
+  confirmUpiPin = '';
   faceImageBase64 = '';
   cameraError = '';
   captured = false;
@@ -31,6 +32,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   snackbarMessage = '';
 
   private cameraStream: MediaStream | null = null;
+
+  get isFirstSetup() {
+    return this.linkedAccounts.length === 0;
+  }
 
   constructor(private auth: AuthService, private router: Router, private accountService: AccountService) {}
 
@@ -110,7 +115,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.infoMessage = '';
 
-    this.accountService.requestOtp(this.phoneNumber, this.upiPin).subscribe({
+    this.accountService.requestOtp(this.phoneNumber).subscribe({
       next: (response: any) => {
         this.infoMessage = `${response.message}. Demo OTP: ${response.demoOtp}`;
       },
@@ -129,12 +134,25 @@ export class ProfileComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.accountService.verifyOtp(this.phoneNumber, this.otpCode, this.faceImageBase64).subscribe({
+    if (this.isFirstSetup && (this.createUpiPin.length < 4 || this.confirmUpiPin.length < 4)) {
+      this.errorMessage = 'Create and confirm a 4-6 digit UPI PIN for first-time setup';
+      return;
+    }
+
+    this.accountService.verifyOtp(
+      this.phoneNumber,
+      this.otpCode,
+      this.faceImageBase64,
+      this.isFirstSetup ? this.createUpiPin : undefined,
+      this.isFirstSetup ? this.confirmUpiPin : undefined
+    ).subscribe({
       next: (response: any) => {
         this.infoMessage = `${response.message} | UPI ID: ${response.upiId}`;
-        this.showSnackbar(`UPI ID created successfully: ${response.upiId}`);
+        this.showSnackbar(`UPI setup complete: ${response.upiId}`);
         this.loadLinkedAccounts();
         this.otpCode = '';
+        this.createUpiPin = '';
+        this.confirmUpiPin = '';
         this.faceImageBase64 = '';
         this.captured = false;
       },

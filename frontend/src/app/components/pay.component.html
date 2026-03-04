@@ -1,20 +1,20 @@
-<div class="navbar">
-  <div class="logo">UPI Payment</div>
+<div class="navbar gpay-nav">
+  <div class="logo">Send Money</div>
   <a class="link" routerLink="/dashboard">Back</a>
 </div>
 
-<div class="card">
-  <h2>Send Money</h2>
+<div class="card pay-shell gpay-surface">
+  <h2>Pay anyone on UPI</h2>
 
-  <div class="form-group">
-    <label>Search by phone or UPI ID</label>
+  <div class="payee-banner">
+    <p>To mobile number or UPI ID</p>
     <input type="text" [ngModel]="query" (ngModelChange)="onQueryChange($event)" placeholder="9876543210 or name&#64;upi" />
-    <small *ngIf="!resolvedPayee && !resolving">Type 10-digit phone or UPI ID (with &#64;)</small>
+    <small *ngIf="!resolvedPayee && !resolving">Enter 10-digit phone or UPI ID (with &#64;)</small>
   </div>
 
-  <div *ngIf="resolving" class="loading">Resolving payee...</div>
+  <div *ngIf="resolving" class="loading">Finding payee...</div>
 
-  <div *ngIf="resolvedPayee" class="card" style="padding: 12px; margin-bottom: 14px;">
+  <div *ngIf="resolvedPayee" class="payee-card">
     <div><strong>{{ resolvedPayee.name }}</strong> <span *ngIf="resolvedPayee.verified" class="badge-safe">Verified</span></div>
     <div *ngIf="isPhoneQuery">UPI ID: {{ resolvedPayee.upiId }}</div>
     <div *ngIf="!isPhoneQuery">Phone: {{ resolvedPayee.phone }}</div>
@@ -22,17 +22,25 @@
 
   <p *ngIf="error" class="pay-error">{{ error }}</p>
 
-  <div class="form-group">
+  <div class="amount-card">
     <label>Amount</label>
-    <input type="number" [(ngModel)]="amount" />
+    <div class="currency-input">
+      <span>₹</span>
+      <input type="number" [(ngModel)]="amount" placeholder="0" />
+    </div>
+    <div class="chip-row">
+      <button class="chip" type="button" (click)="amount = 100">+₹100</button>
+      <button class="chip" type="button" (click)="amount = 500">+₹500</button>
+      <button class="chip" type="button" (click)="amount = 1000">+₹1000</button>
+    </div>
   </div>
 
   <div class="form-group">
-    <label>Remark</label>
-    <input type="text" [(ngModel)]="remark" placeholder="Add note" />
+    <label>Remark (optional)</label>
+    <input type="text" [(ngModel)]="remark" placeholder="Dinner, rent, shopping..." />
   </div>
 
-  <button class="primary-btn" [disabled]="amount <= 0 || resolving" (click)="pay()">
-    {{ resolving ? 'Please wait...' : 'Pay' }}
+  <button class="pay-cta" [disabled]="amount <= 0 || resolving" (click)="pay()">
+    {{ resolving ? 'Please wait...' : 'Proceed to UPI PIN' }}
   </button>
 </div>

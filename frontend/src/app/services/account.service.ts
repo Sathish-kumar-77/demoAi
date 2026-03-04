@@ -55,12 +55,12 @@ export class AccountService {
     return this.getWithFallback('/accounts/upi-directory');
   }
 
-  requestOtp(phoneNumber: string, upiPin: string) {
-    return this.postWithFallback('/accounts/request-otp', { phoneNumber, upiPin });
+  requestOtp(phoneNumber: string) {
+    return this.postWithFallback('/accounts/request-otp', { phoneNumber });
   }
 
-  verifyOtp(phoneNumber: string, otpCode: string, faceImageBase64: string) {
-    return this.postWithFallback('/accounts/verify-otp', { phoneNumber, otpCode, faceImageBase64 });
+  verifyOtp(phoneNumber: string, otpCode: string, faceImageBase64: string, createUpiPin?: string, confirmUpiPin?: string) {
+    return this.postWithFallback('/accounts/verify-otp', { phoneNumber, otpCode, faceImageBase64, createUpiPin, confirmUpiPin });
   }
 
   getLinkedAccounts() {

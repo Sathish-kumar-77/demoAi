@@ -7,6 +7,7 @@ import { PayPinComponent } from './components/pay-pin.component';
 import { ResultComponent } from './components/result.component';
 import { HistoryComponent } from './components/history.component';
 import { ProfileComponent } from './components/profile.component';
+import { BalancePinComponent } from './components/balance-pin.component';
 import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
@@ -17,7 +18,8 @@ const routes: Routes = [
   { path: 'pay/pin', component: PayPinComponent, canActivate: [AuthGuard] },
   { path: 'result', component: ResultComponent, canActivate: [AuthGuard] },
   { path: 'history', component: HistoryComponent, canActivate: [AuthGuard] },
-  { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] }
+  { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
+  { path: 'balance/pin', component: BalancePinComponent, canActivate: [AuthGuard] }
 ];
 
 @NgModule({

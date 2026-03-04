@@ -12,6 +12,7 @@ import { PayPinComponent } from './components/pay-pin.component';
 import { ResultComponent } from './components/result.component';
 import { HistoryComponent } from './components/history.component';
 import { ProfileComponent } from './components/profile.component';
+import { BalancePinComponent } from './components/balance-pin.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
@@ -24,7 +25,8 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
     PayPinComponent,
     ResultComponent,
     HistoryComponent,
-    ProfileComponent
+    ProfileComponent,
+    BalancePinComponent
   ],
   imports: [BrowserModule, FormsModule, HttpClientModule, AppRoutingModule],
   providers: [

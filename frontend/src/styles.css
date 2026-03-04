@@ -338,3 +338,81 @@ input, textarea, select {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
   z-index: 999;
 }
+
+/* --- GPay-style refresh --- */
+.gpay-nav {
+  background: linear-gradient(90deg, #0f62fe, #2b7bff);
+  color: #fff;
+}
+
+.gpay-nav .link {
+  color: #e7efff;
+}
+
+.gpay-surface {
+  border: 1px solid #e6ecff;
+  box-shadow: 0 10px 24px rgba(34, 79, 202, 0.12);
+}
+
+.login-wrap {
+  background-image: none;
+  background: radial-gradient(circle at 20% 20%, #d7e6ff 0%, #c4dcff 20%, #e9f1ff 55%, #f8fbff 100%);
+}
+
+.login-overlay {
+  background: linear-gradient(160deg, rgba(30, 64, 175, 0.12), rgba(26, 115, 232, 0.05));
+}
+
+.pay-shell {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.payee-banner {
+  background: #f5f9ff;
+  border: 1px solid #dbe8ff;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.payee-banner p {
+  margin: 0 0 8px;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.payee-card {
+  border: 1px solid #dbe8ff;
+  background: #f8fbff;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.amount-card {
+  border: 1px solid #dbe8ff;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.step-card {
+  border: 1px solid #dbe8ff;
+  background: #f8fbff;
+  border-radius: 14px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.live-video {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.gpay-tile {
+  border: 1px solid #dbe8ff;
+}
