@@ -416,3 +416,63 @@ input, textarea, select {
 .gpay-tile {
   border: 1px solid #dbe8ff;
 }
+
+.pin-shell {
+  text-align: center;
+}
+
+.pin-live {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+.pin-live span {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: 0.2s ease;
+}
+
+.pin-live span.filled {
+  background: #1a73e8;
+  transform: scale(1.08);
+}
+
+.pin-helper {
+  margin: 0 0 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 84px));
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 16px;
+}
+
+.pin-key {
+  height: 56px;
+  border-radius: 14px;
+  border: 1px solid #dbe8ff;
+  background: #fff;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pin-key:active {
+  transform: scale(0.98);
+}
+
+.pin-key-muted {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  background: #f1f5f9;
+}

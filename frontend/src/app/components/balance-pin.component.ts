@@ -12,11 +12,29 @@ export class BalancePinComponent {
   pin = '';
   loading = false;
   error = '';
+  readonly maxDigits = 6;
 
   constructor(private accountService: AccountService, private router: Router) {}
 
+  appendDigit(digit: string) {
+    if (this.loading || this.pin.length >= this.maxDigits) return;
+    this.pin += digit;
+    this.error = '';
+  }
+
+  backspace() {
+    if (this.loading || this.pin.length === 0) return;
+    this.pin = this.pin.slice(0, -1);
+  }
+
+  clearPin() {
+    if (this.loading) return;
+    this.pin = '';
+    this.error = '';
+  }
+
   checkBalance() {
-    if (this.pin.length < 4) return;
+    if (this.loading || this.pin.length < 4) return;
 
     this.loading = true;
     this.error = '';
