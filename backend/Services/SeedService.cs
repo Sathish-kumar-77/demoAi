@@ -22,16 +22,22 @@ public static class SeedService
             db.BankAccounts.AddRange(accounts);
         }
 
-        if (!await db.Payees.AnyAsync())
+        var seededPayees = new List<Payee>
         {
-            db.Payees.AddRange(new List<Payee>
+            new() { Name = "Akhil Menon", Phone = "9000011111", UpiId = "akhil@okaxis", Verified = true },
+            new() { Name = "Divya Nair", Phone = "9000011112", UpiId = "divya@okhdfc", Verified = true },
+            new() { Name = "Ramesh Iyer", Phone = "9000011113", UpiId = "ramesh@oksbi", Verified = false },
+            new() { Name = "Kavya Rao", Phone = "9000011114", UpiId = "kavya@okicici", Verified = true },
+            new() { Name = "Nitin Shah", Phone = "9000011115", UpiId = "nitin@paytm", Verified = false }
+        };
+
+        foreach (var payee in seededPayees)
+        {
+            var exists = await db.Payees.AnyAsync(p => p.Phone == payee.Phone || p.UpiId == payee.UpiId);
+            if (!exists)
             {
-                new() { Name = "Akhil Menon", Phone = "9000011111", UpiId = "akhil@okaxis", Verified = true },
-                new() { Name = "Divya Nair", Phone = "9000011112", UpiId = "divya@okhdfc", Verified = true },
-                new() { Name = "Ramesh Iyer", Phone = "9000011113", UpiId = "ramesh@oksbi", Verified = false },
-                new() { Name = "Kavya Rao", Phone = "9000011114", UpiId = "kavya@okicici", Verified = true },
-                new() { Name = "Nitin Shah", Phone = "9000011115", UpiId = "nitin@paytm", Verified = false }
-            });
+                db.Payees.Add(payee);
+            }
         }
 
         await db.SaveChangesAsync();

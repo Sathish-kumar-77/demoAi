@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { AccountService } from '../services/account.service';
@@ -9,16 +9,31 @@ import { PaymentSessionService } from '../services/payment-session.service';
   standalone: false,
   templateUrl: './pay.component.html'
 })
-export class PayComponent implements OnDestroy {
+export class PayComponent implements OnDestroy, OnInit {
   query = '';
   amount = 0;
   remark = '';
   error = '';
   resolvedPayee: any = null;
   resolving = false;
+  samplePayees: any[] = [];
 
   private query$ = new Subject<string>();
   private destroy$ = new Subject<void>();
+
+  ngOnInit() {
+    this.accountService.getSamplePayees().subscribe({
+      next: (items: any) => {
+        this.samplePayees = items || [];
+      }
+    });
+  }
+
+  selectSample(payee: any) {
+    this.query = payee.upiId;
+    this.resolvedPayee = payee;
+    this.error = "";
+  }
 
   constructor(
     private router: Router,

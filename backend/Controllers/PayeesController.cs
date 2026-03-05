@@ -17,6 +17,20 @@ public class PayeesController : ControllerBase
         _db = db;
     }
 
+    [HttpGet("samples")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Samples()
+    {
+        var payees = await _db.Payees
+            .OrderByDescending(p => p.Verified)
+            .ThenBy(p => p.Name)
+            .Take(12)
+            .Select(p => new { name = p.Name, phone = p.Phone, upiId = p.UpiId, verified = p.Verified })
+            .ToListAsync();
+
+        return Ok(payees);
+    }
+
     /// <summary>
     /// Resolve payee by phone (10 digits) or UPI ID.
     /// </summary>
@@ -30,14 +44,14 @@ public class PayeesController : ControllerBase
             return NotFound(new { message = "Payee not found" });
         }
 
-        var trimmed = query.Trim();
-        var isPhone = trimmed.Length == 10 && trimmed.All(char.IsDigit);
-        var isUpi = trimmed.Contains('@');
+        var normalized = query.Trim().ToLowerInvariant();
+        var isPhone = normalized.Length == 10 && normalized.All(char.IsDigit);
+        var isUpi = normalized.Contains('@');
 
         var payee = isPhone
-            ? await _db.Payees.FirstOrDefaultAsync(p => p.Phone == trimmed)
+            ? await _db.Payees.FirstOrDefaultAsync(p => p.Phone == normalized)
             : isUpi
-                ? await _db.Payees.FirstOrDefaultAsync(p => p.UpiId.ToLower() == trimmed.ToLower())
+                ? await _db.Payees.FirstOrDefaultAsync(p => p.UpiId.ToLower() == normalized)
                 : null;
 
         if (payee == null)

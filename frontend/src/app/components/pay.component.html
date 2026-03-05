@@ -14,6 +14,16 @@
 
   <div *ngIf="resolving" class="loading">Finding payee...</div>
 
+  <div class="sample-payees" *ngIf="samplePayees.length > 0">
+    <p>Sample payees (tap to select):</p>
+    <div class="chip-row">
+      <button class="chip" type="button" *ngFor="let p of samplePayees" (click)="selectSample(p)">
+        {{ p.name }} • {{ p.upiId }}
+      </button>
+    </div>
+  </div>
+
+
   <div *ngIf="resolvedPayee" class="payee-card">
     <div><strong>{{ resolvedPayee.name }}</strong> <span *ngIf="resolvedPayee.verified" class="badge-safe">Verified</span></div>
     <div *ngIf="isPhoneQuery">UPI ID: {{ resolvedPayee.upiId }}</div>

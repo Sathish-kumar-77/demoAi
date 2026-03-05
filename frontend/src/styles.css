@@ -476,3 +476,17 @@ input, textarea, select {
   color: #334155;
   background: #f1f5f9;
 }
+
+.sample-payees {
+  margin: 10px 0 14px;
+  padding: 10px;
+  border: 1px dashed #c7d9ff;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.sample-payees p {
+  margin: 0 0 8px;
+  color: #475569;
+  font-size: 13px;
+}
