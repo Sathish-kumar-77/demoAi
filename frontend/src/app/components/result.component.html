@@ -1,0 +1,23 @@
+<div class="navbar">
+  <div class="logo">Fraud Result</div>
+  <a class="link" routerLink="/dashboard">Back</a>
+</div>
+
+<div class="card" *ngIf="result">
+  <h2>
+    Status:
+    <span [class.badge-fraud]="result.isFraud" [class.badge-safe]="!result.isFraud">
+      {{ result.isFraud ? 'Fraud' : 'Safe' }}
+    </span>
+  </h2>
+  <p>Probability: {{ (result.fraudProbability * 100) | number: '1.0-2' }}%</p>
+  <h3>Why flagged</h3>
+  <ul>
+    <li *ngFor="let reason of result.reasons">{{ reason }}</li>
+  </ul>
+  <button class="primary-btn" (click)="backToDashboard()">Done</button>
+</div>
+
+<div class="card" *ngIf="!result">
+  <p>No recent result found.</p>
+</div>

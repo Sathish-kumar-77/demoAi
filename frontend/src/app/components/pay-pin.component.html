@@ -1,0 +1,31 @@
+<div class="navbar">
+  <div class="logo">Enter UPI PIN</div>
+  <a class="link" routerLink="/pay">Back</a>
+</div>
+
+<div class="card" *ngIf="draft">
+  <p>Paying <strong>₹{{ draft.amount }}</strong> to <strong>{{ draft.payeeName }}</strong> ({{ draft.payeeUpiId }})</p>
+
+  <div class="form-group">
+    <label>UPI PIN (4/6 digits)</label>
+    <input type="password" maxlength="6" [(ngModel)]="pin" placeholder="Enter UPI PIN" />
+  </div>
+
+  <div class="form-group">
+    <label>Live Face Verification (camera capture)</label>
+    <video #faceVideo autoplay playsinline muted style="width:100%; max-width:320px; border-radius:8px; border:1px solid #ddd;"></video>
+    <canvas #faceCanvas style="display:none;"></canvas>
+    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="chip" (click)="startCamera()" type="button">Start/Retry Camera</button>
+      <button class="chip" (click)="captureFace()" type="button">Capture Live Face</button>
+    </div>
+    <small *ngIf="captured" style="color:#166534;">Face captured for risk verification.</small>
+    <small *ngIf="cameraError" class="pay-error">{{ cameraError }}</small>
+  </div>
+
+  <button class="primary-btn" [disabled]="loading || pin.length < 4" (click)="confirmPay()">
+    {{ loading ? 'Processing...' : 'Confirm Pay' }}
+  </button>
+
+  <p *ngIf="error" class="pay-error">{{ error }}</p>
+</div>

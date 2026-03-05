@@ -1,0 +1,187 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using UpiFraudApi.Data;
+using UpiFraudApi.DTOs;
+using UpiFraudApi.Entities;
+using UpiFraudApi.Services;
+
+namespace UpiFraudApi.Controllers;
+
+[ApiController]
+[Route("api/transactions")]
+[Authorize]
+public class TransactionsController : ControllerBase
+{
+    private readonly AppDbContext _db;
+    private readonly MlService _ml;
+    private readonly EmailService _email;
+    private readonly FaceVerificationService _face;
+
+    public TransactionsController(AppDbContext db, MlService ml, EmailService email, FaceVerificationService face)
+    {
+        _db = db;
+        _ml = ml;
+        _email = email;
+        _face = face;
+    }
+
+    [HttpPost("pay")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PayResponse>> Pay(PayRequest request)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+
+        var now = DateTime.UtcNow;
+        var sourceLink = await _db.UserLinkedAccounts
+            .Include(x => x.BankAccount)
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.IsPrimary);
+
+        if (sourceLink?.BankAccount == null)
+            return BadRequest("No linked account found. Link account from Profile.");
+
+        var payee = await _db.Payees.FirstOrDefaultAsync(p => p.UpiId == request.PayeeUpiId || p.Phone == request.PayeePhone);
+        if (payee == null)
+            return BadRequest("UPI ID not found in UPI directory");
+
+        if (sourceLink.BankAccount.Balance < request.Amount)
+            return BadRequest("Insufficient balance");
+
+        var noteLength = request.Remark?.Length ?? 0;
+        var hasTrustedDevice = await _db.Transactions.AnyAsync(t => t.UserId == userId && t.DeviceId == request.DeviceId);
+        var hasLocation = await _db.Transactions.AnyAsync(t => t.UserId == userId && t.City == request.Channel);
+        var velocityCount = await _db.Transactions.CountAsync(t => t.UserId == userId && t.CreatedAt >= now.AddMinutes(-10));
+
+        var deviceRisk = hasTrustedDevice ? 0.0 : 1.0;
+        var locationRisk = hasLocation ? 0.0 : 1.0;
+        var velocityRisk = Math.Min(1.0, velocityCount / 5.0);
+
+        var features = new Dictionary<string, double>
+        {
+            ["amount"] = (double)request.Amount,
+            ["hour"] = request.HourOfDay,
+            ["device_risk"] = deviceRisk,
+            ["location_risk"] = locationRisk,
+            ["velocity_risk"] = velocityRisk,
+            ["note_length"] = noteLength
+        };
+
+        var prediction = await _ml.PredictAsync(features);
+        var predictionLabel = prediction.IsFraud ? "Fraud" : "Safe";
+        var riskLevel = prediction.FraudProbability >= 0.8 ? "HIGH" : prediction.FraudProbability >= 0.45 ? "MEDIUM" : "LOW";
+
+        var reasons = new List<string>();
+        if (deviceRisk > 0) reasons.Add("New device detected");
+        if (locationRisk > 0) reasons.Add("New channel/location detected");
+        if (velocityRisk > 0.6) reasons.Add("High transaction velocity");
+        if (request.Amount > 5000) reasons.Add("High amount transaction");
+        if (reasons.Count == 0) reasons.Add("Behavior within normal range");
+
+        var status = "Completed";
+        var allowTransaction = true;
+        var requiresFaceVerification = riskLevel != "LOW" || prediction.IsFraud;
+
+        if (requiresFaceVerification)
+        {
+            if (string.IsNullOrWhiteSpace(request.FaceImageBase64))
+            {
+                return BadRequest($"Face verification required for {riskLevel} risk/suspicious transaction");
+            }
+
+            var faceStored = await _db.UserFaceEmbeddings.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (faceStored == null)
+            {
+                return BadRequest("Face not registered. Complete face registration first.");
+            }
+
+            var faceResult = await _face.VerifyFaceAsync(request.FaceImageBase64, faceStored.Embedding);
+
+            if (riskLevel == "MEDIUM")
+            {
+                allowTransaction = faceResult.Match;
+                if (!allowTransaction)
+                {
+                    status = "Cancelled";
+                    reasons.Add("Face verification failed (MEDIUM risk)");
+                }
+            }
+            else
+            {
+                allowTransaction = faceResult.Match && hasTrustedDevice;
+                if (!allowTransaction)
+                {
+                    status = "Cancelled";
+                    reasons.Add("Face verification/device trust failed (HIGH risk)");
+                    var user = await _db.Users.FirstAsync(u => u.Id == userId);
+                    user.IsFlagged = true;
+                }
+            }
+        }
+
+        var tx = new Transaction
+        {
+            UserId = userId,
+            UpiId = payee.UpiId,
+            Amount = request.Amount,
+            Note = request.Remark,
+            DeviceId = request.DeviceId,
+            City = request.Channel,
+            FraudProbability = prediction.FraudProbability,
+            IsFraud = prediction.IsFraud,
+            Prediction = predictionLabel,
+            Status = status,
+            Reasons = string.Join("|", reasons),
+            CreatedAt = now
+        };
+
+        if (allowTransaction)
+        {
+            sourceLink.BankAccount.Balance -= request.Amount;
+        }
+
+        _db.Transactions.Add(tx);
+        await _db.SaveChangesAsync();
+
+        if (prediction.IsFraud)
+        {
+            _email.SendFraudAlert(email, "UPI Fraud Alert", $"Transaction {tx.Id} flagged as fraud. Probability: {prediction.FraudProbability:P2}.");
+        }
+
+        return Ok(new PayResponse(tx.Id, prediction.IsFraud, predictionLabel, prediction.FraudProbability, reasons, tx.Status));
+    }
+
+    [HttpPost("{id:int}/refund")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Refund(int id)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        var tx = await _db.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+        if (tx == null) return NotFound("Transaction not found");
+
+        var canRefund = tx.FraudProbability >= 0.80 || tx.IsFraud || tx.Prediction == "Fraud";
+        if (!canRefund) return BadRequest("Refund allowed only for fraud-flagged transactions");
+
+        tx.Status = "Refund Initiated";
+        await _db.SaveChangesAsync();
+
+        return Ok(new { tx.Id, tx.UpiId, tx.Amount, tx.FraudProbability, tx.Prediction, tx.Status });
+    }
+
+    [HttpGet("history")]
+    public async Task<IActionResult> History()
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        var history = await _db.Transactions
+            .Where(t => t.UserId == userId)
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new { t.Id, t.UpiId, t.Amount, t.IsFraud, t.Prediction, t.Status, t.FraudProbability, t.CreatedAt })
+            .ToListAsync();
+
+        return Ok(history);
+    }
+}

@@ -1,0 +1,119 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
+import { PaymentSessionService } from '../services/payment-session.service';
+import { TransactionService } from '../services/transaction.service';
+
+@Component({
+  selector: 'app-pay-pin',
+  standalone: false,
+  templateUrl: './pay-pin.component.html'
+})
+export class PayPinComponent implements OnInit, OnDestroy {
+  @ViewChild('faceVideo') faceVideoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('faceCanvas') faceCanvasRef?: ElementRef<HTMLCanvasElement>;
+
+  pin = '';
+  loading = false;
+  error = '';
+  draft: any = null;
+  faceImageBase64 = '';
+  cameraError = '';
+  captured = false;
+
+  private cameraStream: MediaStream | null = null;
+
+  constructor(
+    private paymentSession: PaymentSessionService,
+    private txService: TransactionService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    this.draft = this.paymentSession.getDraft();
+    if (!this.draft) {
+      this.router.navigate(['/pay']);
+      return;
+    }
+
+    this.startCamera();
+  }
+
+  ngOnDestroy() {
+    this.stopCamera();
+  }
+
+  async startCamera() {
+    this.cameraError = '';
+
+    try {
+      this.stopCamera();
+      this.cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      if (this.faceVideoRef?.nativeElement) {
+        this.faceVideoRef.nativeElement.srcObject = this.cameraStream;
+      }
+    } catch {
+      this.cameraError = 'Camera access denied or unavailable. Please allow camera permission.';
+    }
+  }
+
+  captureFace() {
+    const video = this.faceVideoRef?.nativeElement;
+    const canvas = this.faceCanvasRef?.nativeElement;
+    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
+      this.cameraError = 'Camera stream is not ready yet. Please try again.';
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      this.cameraError = 'Unable to read camera frame.';
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    this.faceImageBase64 = dataUrl.split(',')[1] || '';
+    this.captured = !!this.faceImageBase64;
+  }
+
+  private stopCamera() {
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach(track => track.stop());
+      this.cameraStream = null;
+    }
+  }
+
+  confirmPay() {
+    if (!this.draft || !this.pin) {
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+
+    this.txService.pay({
+      payeeUpiId: this.draft.payeeUpiId,
+      payeePhone: this.draft.payeePhone,
+      amount: this.draft.amount,
+      remark: this.draft.remark,
+      deviceId: 'demo-device-1',
+      hourOfDay: new Date().getHours(),
+      channel: 'UPI_APP',
+      faceImageBase64: this.faceImageBase64 || null
+    }).subscribe({
+      next: (response) => {
+        this.loading = false;
+        this.paymentSession.clear();
+        localStorage.setItem('lastResult', JSON.stringify(response));
+        this.router.navigate(['/result']);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loading = false;
+        this.error = typeof error.error === 'string' ? error.error : error.error?.message || 'Payment failed';
+      }
+    });
+  }
+}

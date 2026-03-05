@@ -1,0 +1,32 @@
+<div class="navbar">
+  <div class="logo">Transaction History</div>
+  <a class="link" routerLink="/dashboard">Back</a>
+</div>
+
+<div class="card">
+  <h2>Recent transactions</h2>
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align: left; padding: 8px;">UPI ID</th>
+        <th style="text-align: left; padding: 8px;">Amount</th>
+        <th style="text-align: left; padding: 8px;">Prediction</th>
+        <th style="text-align: left; padding: 8px;">Status</th>
+        <th style="text-align: left; padding: 8px;">Time</th>
+        <th style="text-align: left; padding: 8px;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let tx of history">
+        <td style="padding: 8px;">{{ tx.upiId }}</td>
+        <td style="padding: 8px;">₹{{ tx.amount }}</td>
+        <td style="padding: 8px;">{{ tx.prediction }}</td>
+        <td style="padding: 8px;">{{ tx.status }}</td>
+        <td style="padding: 8px;">{{ tx.createdAt | date: 'short' }}</td>
+        <td style="padding: 8px;">
+          <button class="chip" *ngIf="canRefund(tx) && tx.status !== 'Refund Initiated'" (click)="refund(tx)">Refund</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

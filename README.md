@@ -1,0 +1,161 @@
+# UPI Fraud Detection Demo
+
+## Version compatibility
+- Node.js: `v22.15.0` ✅
+- npm: `10.9.2` ✅
+- Angular CLI/packages: `19.2.x` (configured in `frontend/package.json`)
+- .NET SDK: 7.0+ (project targets net7.0)
+- Python: 3.10+
+
+## Folder structure
+```
+frontend/           # Angular app
+backend/            # ASP.NET Core Web API
+ml_service/         # FastAPI ML service
+face_service/       # FastAPI face recognition service
+```
+
+## Run instructions
+
+### 1) ML Service (FastAPI)
+```bash
+cd ml_service
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python train.py
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
+
+### 2) Backend (.NET API)
+```bash
+cd backend
+# restore packages
+dotnet restore
+# create sqlite db (install dotnet-ef tool once if required: dotnet tool install --global dotnet-ef)
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+# run api
+dotnet run --urls http://localhost:5000
+```
+
+### 3) Frontend (Angular)
+```bash
+cd frontend
+npm install
+npm start
+```
+
+## Example requests
+
+### Register
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"Pass@123"}'
+```
+
+### Login
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"Pass@123"}'
+```
+Response:
+```json
+{"token":"<jwt>"}
+```
+
+### Pay transaction
+```bash
+curl -X POST http://localhost:5000/api/transactions/pay \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <jwt>" \
+  -d '{"upiId":"name@bank","amount":4200,"note":"groceries","deviceId":"pixel-7","city":"Mumbai"}'
+```
+Response:
+```json
+{
+  "transactionId": 1,
+  "isFraud": false,
+  "fraudProbability": 0.12,
+  "reasons": ["Behavior within normal range"]
+}
+```
+
+### History
+```bash
+curl -X GET http://localhost:5000/api/transactions/history \
+  -H "Authorization: Bearer <jwt>"
+```
+
+## Troubleshooting
+- If you upgraded from older schema, delete old `backend/upi-fraud.db` once so seeded account/link tables are recreated.
+- CORS: Backend now allows localhost/127.0.0.1 origins on both http/https and any local port for demo development.
+- HTTPS: `UseHttpsRedirection` is disabled for this demo so Angular can call `http://localhost:5000` directly without redirect issues.
+- SMTP: Update `backend/appsettings.json` with real SMTP credentials.
+- ML JSON contract: backend now maps FastAPI snake_case response keys (`fraud_probability`, `is_fraud`) correctly.
+
+
+## Frontend security notes (npm audit)
+- If you see warnings for deprecated transitive packages like `tar@6` or `glob@10`, this repo now uses `overrides` in `frontend/package.json` to force newer versions where compatible.
+- Run:
+  ```bash
+  cd frontend
+  npm install
+  npm audit
+  npm audit fix
+  ```
+- If your corporate registry blocks package upgrades, ask your admin to allow the required Angular/npm packages.
+- Avoid `npm audit fix --force` unless you are ready to retest the app for breaking changes.
+
+- If Pay shows `API unreachable`, confirm backend is started with: `dotnet run --urls http://localhost:5000`.
+
+- Frontend API fallback: Angular now tries `http://localhost:5000/api` first, then `https://localhost:5001/api` automatically.
+
+
+## Bank linking + balance flow (important)
+1. Register/Login.
+2. Open **Profile** page.
+3. Link bank account using sample phone number + UPI PIN.
+4. Go to Dashboard -> click **Check with UPI PIN** to view live balance.
+5. Make payment; backend deducts amount from linked account.
+
+### Seeded sample accounts
+- Arjun Kumar, SBI, Phone: `9876543210`, UPI PIN: `1111`
+- Priya Sharma, HDFC, Phone: `9123456780`, UPI PIN: `2222`
+- Rahul Verma, ICICI, Phone: `9988776655`, UPI PIN: `3333`
+- Sneha Reddy, Axis, Phone: `9090909090`, UPI PIN: `4444`
+
+
+## OTP-based account linking (updated)
+- Profile now uses **2-step link flow**:
+  1. Enter phone number + UPI PIN and request OTP.
+  2. Verify OTP to create permanent UPI ID and link account.
+- Users can link **multiple bank accounts** and remove linked accounts.
+- Pay supports only receiver UPI IDs from backend UPI directory.
+
+### New account APIs
+- `GET /api/accounts/bank-directory`
+- `GET /api/accounts/upi-directory`
+- `POST /api/accounts/request-otp` `{ phoneNumber, upiPin }`
+- `POST /api/accounts/verify-otp` `{ phoneNumber, otpCode }`
+- `GET /api/accounts/linked`
+- `DELETE /api/accounts/linked/{linkedId}`
+- `POST /api/accounts/balance` `{ upiPin }`
+
+
+## Quick run (services)
+1. Start ML service (FastAPI) on port `8000`.
+2. Start Face service (FastAPI) on port `8010`.
+3. Start .NET API (`backend`) on localhost (`5000`/`5001`).
+4. Start Angular app (`frontend`) on `4200`.
+
+### Start Face service
+```bash
+cd face_service
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8010 --workers 2
+```
